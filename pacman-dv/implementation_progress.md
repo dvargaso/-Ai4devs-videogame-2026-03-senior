@@ -10,6 +10,7 @@ We will build the game in small, testable phases. We will only move to the next 
 - Keep each phase small, readable, and manually testable.
 - Preserve existing working behavior when adding new features.
 - Stop after each phase and wait for explicit approval before continuing.
+- Run `node mazeRules.test.js` from `pacman-dv` after changes that affect maze or movement rules.
 
 ## Phase 1: Phaser Canvas and Free Pacman Movement
 

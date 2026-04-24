@@ -1,5 +1,15 @@
-const GRID_SIZE = 10;
-const CELL_SIZE = 50;
+const {
+  GRID_SIZE,
+  CELL_SIZE,
+  DIRECTIONS,
+  hasEdgeDoor,
+  hasVerticalWall,
+  hasHorizontalWall,
+  getNextCell,
+  chooseMovementDirection,
+  getCellCenter
+} = PacmanMazeRules;
+
 const GAME_WIDTH = GRID_SIZE * CELL_SIZE;
 const GAME_HEIGHT = GRID_SIZE * CELL_SIZE;
 const PACMAN_SPEED = 160;
@@ -9,45 +19,6 @@ const MAX_MOUTH_OPENING = 0.75;
 const WALL_THICKNESS = 6;
 const WALL_COLOR = 0x163cff;
 const PATH_COLOR = 0x050505;
-
-const EDGE_DOORS = {
-  top: [1, 5, 8],
-  right: [1, 5, 8],
-  bottom: [1, 5, 8],
-  left: [1, 5, 8]
-};
-
-const VERTICAL_DOORS = [
-  { col: 1, rows: [0, 1, 3, 5, 7, 9] },
-  { col: 2, rows: [0, 2, 4, 6, 8] },
-  { col: 3, rows: [0, 2, 4, 5, 7, 9] },
-  { col: 4, rows: [1, 3, 5, 7, 9] },
-  { col: 5, rows: [0, 1, 3, 5, 7, 9] },
-  { col: 6, rows: [0, 2, 4, 6, 7, 9] },
-  { col: 7, rows: [0, 1, 3, 5, 7, 9] },
-  { col: 8, rows: [0, 2, 4, 6, 8, 9] },
-  { col: 9, rows: [0, 1, 3, 5, 7, 9] }
-];
-
-const HORIZONTAL_DOORS = [
-  { row: 1, cols: [0, 2, 4, 6, 9] },
-  { row: 2, cols: [0, 2, 4, 6, 8] },
-  { row: 3, cols: [0, 2, 5, 7, 9] },
-  { row: 4, cols: [0, 2, 4, 6, 8] },
-  { row: 5, cols: [0, 3, 5, 7, 9] },
-  { row: 6, cols: [0, 2, 4, 6, 9] },
-  { row: 7, cols: [0, 3, 5, 7, 9] },
-  { row: 8, cols: [0, 1, 3, 5, 7, 9] },
-  { row: 9, cols: [0, 2, 4, 6, 7, 9] }
-];
-
-const DIRECTIONS = {
-  left: { row: 0, col: -1, angle: Math.PI },
-  right: { row: 0, col: 1, angle: 0 },
-  up: { row: -1, col: 0, angle: -Math.PI / 2 },
-  down: { row: 1, col: 0, angle: Math.PI / 2 },
-  none: { row: 0, col: 0, angle: 0 }
-};
 
 let pacman;
 let mazeGraphics;
@@ -114,12 +85,9 @@ function updateRequestedDirection() {
 }
 
 function chooseNextCell() {
-  if (canMove(gridPosition, requestedDirection)) {
-    movementDirection = requestedDirection;
-  }
+  movementDirection = chooseMovementDirection(gridPosition, movementDirection, requestedDirection);
 
-  if (!canMove(gridPosition, movementDirection)) {
-    movementDirection = DIRECTIONS.none;
+  if (movementDirection === DIRECTIONS.none) {
     return;
   }
 
@@ -154,84 +122,10 @@ function movePacmanTowardTarget(delta) {
   pacman.y += movementDirection.row * distanceThisFrame;
 }
 
-function canMove(fromCell, direction) {
-  if (direction === DIRECTIONS.none) {
-    return false;
-  }
-
-  const nextCell = getNextCell(fromCell, direction);
-
-  if (nextCell.isBlockedByEdge) {
-    return false;
-  }
-
-  if (nextCell.isWrapped) {
-    return true;
-  }
-
-  return !hasWallBetween(fromCell, nextCell);
-}
-
-function getNextCell(fromCell, direction) {
-  let nextRow = fromCell.row + direction.row;
-  let nextCol = fromCell.col + direction.col;
-  let isWrapped = false;
-  let isBlockedByEdge = false;
-
-  if (nextCol < 0 && hasEdgeDoor('left', fromCell.row) && hasEdgeDoor('right', fromCell.row)) {
-    nextCol = GRID_SIZE - 1;
-    isWrapped = true;
-  } else if (nextCol >= GRID_SIZE && hasEdgeDoor('right', fromCell.row) && hasEdgeDoor('left', fromCell.row)) {
-    nextCol = 0;
-    isWrapped = true;
-  } else if (nextRow < 0 && hasEdgeDoor('top', fromCell.col) && hasEdgeDoor('bottom', fromCell.col)) {
-    nextRow = GRID_SIZE - 1;
-    isWrapped = true;
-  } else if (nextRow >= GRID_SIZE && hasEdgeDoor('bottom', fromCell.col) && hasEdgeDoor('top', fromCell.col)) {
-    nextRow = 0;
-    isWrapped = true;
-  } else if (nextRow < 0 || nextRow >= GRID_SIZE || nextCol < 0 || nextCol >= GRID_SIZE) {
-    isBlockedByEdge = true;
-  }
-
-  return { row: nextRow, col: nextCol, isWrapped, isBlockedByEdge };
-}
-
-function hasWallBetween(fromCell, toCell) {
-  if (fromCell.row === toCell.row) {
-    const wallCol = Math.max(fromCell.col, toCell.col);
-    return hasVerticalWall(fromCell.row, wallCol);
-  }
-
-  const wallRow = Math.max(fromCell.row, toCell.row);
-  return hasHorizontalWall(wallRow, fromCell.col);
-}
-
-function hasVerticalWall(row, col) {
-  const doorLine = VERTICAL_DOORS.find((door) => door.col === col);
-  return !doorLine || !doorLine.rows.includes(row);
-}
-
-function hasHorizontalWall(row, col) {
-  const doorLine = HORIZONTAL_DOORS.find((door) => door.row === row);
-  return !doorLine || !doorLine.cols.includes(col);
-}
-
-function hasEdgeDoor(edge, position) {
-  return EDGE_DOORS[edge].includes(position);
-}
-
 function placePacmanAtCell(cell) {
   const center = getCellCenter(cell.row, cell.col);
   pacman.x = center.x;
   pacman.y = center.y;
-}
-
-function getCellCenter(row, col) {
-  return {
-    x: col * CELL_SIZE + CELL_SIZE / 2,
-    y: row * CELL_SIZE + CELL_SIZE / 2
-  };
 }
 
 function drawMaze() {

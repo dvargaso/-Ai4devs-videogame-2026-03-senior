@@ -185,3 +185,8 @@ There's too many doors between paths. There should be more walls. Right now paca
 ##Adjustment 4 
 The walls are  now creating "virtual rooms"  The only way out of a room cannot only be trough an edge of the grid. 
 I want to lomit the number of edge doors. Maximim 3 per side. It's a scape route and it valid. But most of the pacaman navigation should be within the grid withouth hacing to use tunnels all the time. 
+
+## Phase 2 MVP reached 
+It's not great but it's acceptable. Before I add any more rules. I want to be sure that further changes don't break existing rules grid and movement rules. Create a unit test file and add unit tests for every single rule that we have discusses. I want to guarantee that everything stays working ad we add more rules. 
+
+##Adjustment 5
