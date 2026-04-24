@@ -167,3 +167,21 @@ Good.
 Apply the following adjustments
 - Pacman moves but it doesn't continue mmoveing. Once a direction has been set by the player with the arrow keys, pcam an must contnue moving in the same direction until the player changes it again or the game f=finishes by wither the player losing or winning the level
 - Right now, the edges of the grid are walls. There can be doors in the adges as well. If pacman or the ghosts enter a door that it's in an edge, it continues moving in the same direction from the oposite side of the grid when there is a door
+
+#Phase 2 
+
+##Adjustment 1
+
+The output it's not the expectted.  Few  things to clarify.
+The walls won't fill up a cell in the grid. They are thin but clearly visible. They just separate the maze paths and offer doors for the pacman to enter or exit. 
+
+
+## Adjustment 2
+Much better.Another correction needed. There cannot be rooms created by walls. All paths must be reachable trough doors. All the positions in the grid must be reachable by pacaman by navigatin trough paths and doors
+
+##Adjustment 3 
+There's too many doors between paths. There should be more walls. Right now pacaman can move wayy to freely. It's movement should be limited to moving left or right or up or down. It should only be able to change directions trough a door, there must not be consecutive doors. I stablished. alimit of doors per path. It must be respected. 
+
+##Adjustment 4 
+The walls are  now creating "virtual rooms"  The only way out of a room cannot only be trough an edge of the grid. 
+I want to lomit the number of edge doors. Maximim 3 per side. It's a scape route and it valid. But most of the pacaman navigation should be within the grid withouth hacing to use tunnels all the time. 

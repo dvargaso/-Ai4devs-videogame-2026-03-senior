@@ -13,7 +13,7 @@ We will build the game in small, testable phases. We will only move to the next 
 
 ## Phase 1: Phaser Canvas and Free Pacman Movement
 
-Status: Ready for testing
+Status: Completed
 
 Goal:
 - Create the smallest working Phaser 3 browser game.
@@ -35,20 +35,30 @@ Known limitations:
 
 ## Phase 2: 10x10 Maze and Grid Movement
 
-Status: Not started
+Status: Ready for testing
 
 Goal:
 - Add a fixed 10x10 grid maze.
-- Draw walls as simple rectangles.
+- Draw walls as thin, clearly visible boundaries between grid cells.
 - Change Pacman movement from free movement to cell-by-cell movement.
-- Constrain Pacman to valid walkable paths.
+- Constrain Pacman movement by blocking movement across wall boundaries.
+- Use explicit door gaps in wall boundaries; walls are the default between neighboring cells.
+- Keep each internal vertical and horizontal wall line between 5 and 6 door gaps.
+- Keep all cells reachable through internal grid paths without requiring edge tunnels.
+- Limit edge doors to a maximum of 3 per side; edge tunnels are escape routes, not the main navigation.
 - Keep Pacman moving in the current direction until a wall blocks movement or the player changes direction.
 - Add edge doors that wrap Pacman from one side of the grid to the opposite side when a door exists.
 
 Manual test:
 - Confirm Pacman moves one cell at a time.
-- Confirm Pacman cannot pass through walls.
-- Confirm Pacman can reach all intended walkable areas.
+- Confirm walls are thin boundaries and do not fill entire grid cells.
+- Confirm Pacman cannot cross thin wall boundaries.
+- Confirm Pacman can only move between cells through door gaps in the wall boundaries.
+- Confirm Pacman can only change directions where a door gap allows the new direction.
+- Confirm Pacman can reach all 100 grid positions by navigating through internal paths and door gaps.
+- Confirm Pacman does not need edge tunnels to escape any area.
+- Confirm Pacman keeps moving in the current direction until a wall blocks him or a new valid direction is chosen.
+- Confirm each outer edge has only 3 tunnel doors.
 
 Known limitations:
 - No ghosts yet.
