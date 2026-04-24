@@ -1,0 +1,143 @@
+# Pacman Implementation Progress
+
+We will build the game in small, testable phases. We will only move to the next phase after the current phase has been tested and you explicitly say to continue.
+
+## Project Rules
+
+- Use plain `index.html`, `style.css`, and `game.js`.
+- Load Phaser 3 from a CDN.
+- Do not use npm, bundlers, frameworks, backend code, or external asset files.
+- Keep each phase small, readable, and manually testable.
+- Preserve existing working behavior when adding new features.
+- Stop after each phase and wait for explicit approval before continuing.
+
+## Phase 1: Phaser Canvas and Free Pacman Movement
+
+Status: Ready for testing
+
+Goal:
+- Create the smallest working Phaser 3 browser game.
+- Show a Pacman-like yellow circle with a simple mouth animation.
+- Allow free movement with arrow keys.
+
+Manual test:
+- Open `index.html` in a browser.
+- Confirm the Phaser canvas appears.
+- Press one arrow key once and confirm Pacman keeps moving in that direction.
+- Confirm Pacman changes direction only when another arrow key is pressed.
+- Confirm Pacman wraps to the opposite side after moving past a canvas edge.
+
+Known limitations:
+- No maze yet.
+- No grid movement yet.
+- All canvas edges currently behave like doors; specific maze edge doors will be added with the grid.
+- No ghosts, dots, score, lives, or levels yet.
+
+## Phase 2: 10x10 Maze and Grid Movement
+
+Status: Not started
+
+Goal:
+- Add a fixed 10x10 grid maze.
+- Draw walls as simple rectangles.
+- Change Pacman movement from free movement to cell-by-cell movement.
+- Constrain Pacman to valid walkable paths.
+- Keep Pacman moving in the current direction until a wall blocks movement or the player changes direction.
+- Add edge doors that wrap Pacman from one side of the grid to the opposite side when a door exists.
+
+Manual test:
+- Confirm Pacman moves one cell at a time.
+- Confirm Pacman cannot pass through walls.
+- Confirm Pacman can reach all intended walkable areas.
+
+Known limitations:
+- No ghosts yet.
+- No dots, score, lives, or levels yet.
+
+## Phase 3: Ghosts and Chase Movement
+
+Status: Not started
+
+Goal:
+- Add simple ghost characters.
+- Move ghosts cell-by-cell through the same maze paths as Pacman.
+- Give ghosts deterministic chase behavior using simple grid-based logic.
+- Add basic ghost and Pacman contact detection.
+
+Manual test:
+- Confirm ghosts spawn in valid maze cells.
+- Confirm ghosts move through paths without crossing walls.
+- Confirm ghosts generally move toward Pacman.
+- Confirm contact between Pacman and a ghost is detected.
+
+Known limitations:
+- Ghost collisions may not cost lives until a later phase.
+- No power pellets yet.
+- No score or win condition yet.
+
+## Phase 4: Power Pellets and Vulnerable Ghosts
+
+Status: Not started
+
+Goal:
+- Add 5 to 8 power pellets to valid walkable cells.
+- Let Pacman eat power pellets.
+- Enable a 10-second power mode.
+- Make ghosts vulnerable during power mode.
+- Make vulnerable ghosts run away from Pacman using simple grid logic.
+- Allow Pacman to kill vulnerable ghosts on contact.
+
+Manual test:
+- Confirm power pellets disappear when eaten.
+- Confirm power mode lasts about 10 seconds.
+- Confirm ghosts visibly change state while vulnerable.
+- Confirm Pacman can kill ghosts only during power mode.
+
+Known limitations:
+- Score may still be incomplete until the next phase.
+- Dead ghosts stay gone until the current level resets or advances.
+
+## Phase 5: Dots, Score, and Level Win Condition
+
+Status: Not started
+
+Goal:
+- Add dots to every other valid walkable cell except spawn and power pellet cells.
+- Increase score when Pacman eats dots.
+- Track remaining dots.
+- Win the level when all dots are eaten.
+
+Manual test:
+- Confirm dots appear only on valid paths.
+- Confirm dots disappear when eaten.
+- Confirm score increases after eating dots.
+- Confirm the level win state triggers after all dots are eaten.
+
+Known limitations:
+- Full level progression and lives are added in the next phase.
+
+## Phase 6: Lives, Level Progression, and Ghost Speed Scaling
+
+Status: Not started
+
+Goal:
+- Add 3 lives.
+- Lose one life when Pacman touches a dangerous ghost.
+- Reset Pacman and active ghosts to spawn positions after losing a life while preserving eaten dots and pellets.
+- Restart from level 1 with score, dots, pellets, ghosts, and lives reset after losing all lives.
+- Add 3 levels.
+- Keep the same maze for all levels.
+- Increase ghost speed by 25% each level.
+- Show a final win state after completing level 3.
+
+Manual test:
+- Confirm dangerous ghost contact removes one life.
+- Confirm the current level progress is preserved after losing a life.
+- Confirm losing all lives fully restarts the game from level 1.
+- Confirm level 2 starts only after clearing level 1.
+- Confirm level 3 starts only after clearing level 2.
+- Confirm ghosts move faster on each level.
+- Confirm completing level 3 shows the final win state.
+
+Known limitations:
+- This is the final planned milestone for the toy game.
