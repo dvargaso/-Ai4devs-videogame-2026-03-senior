@@ -18,24 +18,23 @@
   };
 
   const WALL_COMPONENTS = [
-    { name: 'wall1', shape: 'L', segments: [{ type: 'v', row: 1, col: 1 }, { type: 'h', row: 1, col: 1 }] },
-    { name: 'wall2', shape: 'straight', segments: [{ type: 'h', row: 3, col: 1 }, { type: 'h', row: 3, col: 2 }, { type: 'h', row: 3, col: 3 }, { type: 'h', row: 3, col: 4 }, { type: 'h', row: 3, col: 5 }] },
-    { name: 'wall3', shape: 'T', segments: [{ type: 'v', row: 5, col: 1 }, { type: 'v', row: 6, col: 1 }, { type: 'h', row: 5, col: 1 }, { type: 'h', row: 5, col: 2 }, { type: 'v', row: 4, col: 1 }] },
-    { name: 'wall4', shape: 'straight', segments: [{ type: 'h', row: 7, col: 1 }, { type: 'h', row: 7, col: 2 }, { type: 'h', row: 7, col: 3 }, { type: 'h', row: 7, col: 4 }] },
-    { name: 'wall5', shape: 'straight', segments: [{ type: 'h', row: 9, col: 1 }, { type: 'h', row: 9, col: 2 }, { type: 'h', row: 9, col: 3 }] },
-    { name: 'wall6', shape: 'straight', segments: [{ type: 'h', row: 5, col: 4 }, { type: 'h', row: 5, col: 5 }, { type: 'h', row: 5, col: 6 }] },
-    { name: 'wall7', shape: 'straight', segments: [{ type: 'v', row: 7, col: 1 }, { type: 'v', row: 8, col: 1 }] },
-    { name: 'wall8', shape: 'straight', segments: [{ type: 'h', row: 1, col: 3 }, { type: 'h', row: 1, col: 4 }] },
-    { name: 'wall9', shape: 'straight', segments: [{ type: 'h', row: 1, col: 6 }, { type: 'h', row: 1, col: 7 }, { type: 'h', row: 1, col: 8 }] },
-    { name: 'wall10', shape: 'straight', segments: [{ type: 'h', row: 2, col: 2 }, { type: 'h', row: 2, col: 3 }] },
-    { name: 'wall11', shape: 'straight', segments: [{ type: 'h', row: 2, col: 5 }, { type: 'h', row: 2, col: 6 }, { type: 'h', row: 2, col: 7 }, { type: 'h', row: 2, col: 8 }, { type: 'h', row: 2, col: 9 }] },
-    { name: 'wall12', shape: 'straight', segments: [{ type: 'h', row: 3, col: 7 }, { type: 'h', row: 3, col: 8 }] },
-    { name: 'wall13', shape: 'straight', segments: [{ type: 'h', row: 4, col: 3 }, { type: 'h', row: 4, col: 4 }, { type: 'h', row: 4, col: 5 }, { type: 'h', row: 4, col: 6 }, { type: 'h', row: 4, col: 7 }] },
-    { name: 'wall14', shape: 'straight', segments: [{ type: 'h', row: 6, col: 3 }, { type: 'h', row: 6, col: 4 }, { type: 'h', row: 6, col: 5 }, { type: 'h', row: 6, col: 6 }, { type: 'h', row: 6, col: 7 }] },
-    { name: 'wall15', shape: 'straight', segments: [{ type: 'h', row: 7, col: 6 }, { type: 'h', row: 7, col: 7 }, { type: 'h', row: 7, col: 8 }] },
-    { name: 'wall16', shape: 'straight', segments: [{ type: 'h', row: 8, col: 2 }, { type: 'h', row: 8, col: 3 }, { type: 'h', row: 8, col: 4 }, { type: 'h', row: 8, col: 5 }, { type: 'h', row: 8, col: 6 }] },
-    { name: 'wall17', shape: 'straight', segments: [{ type: 'h', row: 9, col: 5 }, { type: 'h', row: 9, col: 6 }, { type: 'h', row: 9, col: 7 }, { type: 'h', row: 9, col: 8 }] },
-    { name: 'wall18', shape: 'L', segments: [{ type: 'h', row: 5, col: 8 }, { type: 'v', row: 4, col: 8 }, { type: 'h', row: 5, col: 9 }] }
+    { name: 'wall1', shape: 'L', segments: [{ type: 'h', row: 1, col: 1 }, { type: 'h', row: 1, col: 2 }, { type: 'v', row: 1, col: 1 }, { type: 'v', row: 2, col: 1 }] },
+    { name: 'wall2', shape: 'L', segments: [{ type: 'h', row: 1, col: 7 }, { type: 'h', row: 1, col: 8 }, { type: 'v', row: 1, col: 7 }, { type: 'v', row: 1, col: 9 }] },
+    { name: 'wall3', shape: 'L', segments: [{ type: 'h', row: 2, col: 2 }, { type: 'h', row: 2, col: 3 }, { type: 'v', row: 1, col: 4 }] },
+    { name: 'wall4', shape: 'T', segments: [{ type: 'h', row: 3, col: 2 }, { type: 'h', row: 3, col: 3 }, { type: 'h', row: 3, col: 4 }, { type: 'v', row: 2, col: 5 }, { type: 'v', row: 3, col: 5 }] },
+    { name: 'wall5', shape: 'L', segments: [{ type: 'h', row: 3, col: 6 }, { type: 'v', row: 2, col: 6 }, { type: 'v', row: 1, col: 6 }, { type: 'v', row: 0, col: 6 }] },
+    { name: 'wall6', shape: 'T', segments: [{ type: 'h', row: 3, col: 8 }, { type: 'v', row: 2, col: 8 }, { type: 'v', row: 3, col: 8 }, { type: 'h', row: 4, col: 7 }, { type: 'h', row: 4, col: 6 }] },
+    { name: 'wall7', shape: 'straight', segments: [{ type: 'h', row: 4, col: 0 }, { type: 'h', row: 4, col: 1 }] },
+    { name: 'wall8', shape: 'L', segments: [{ type: 'h', row: 5, col: 2 }, { type: 'v', row: 4, col: 3 }, { type: 'v', row: 5, col: 2 }, { type: 'h', row: 6, col: 1 }] },
+    { name: 'wall9', shape: 'L', segments: [{ type: 'h', row: 5, col: 4 }, { type: 'h', row: 5, col: 5 }, { type: 'v', row: 5, col: 4 }, { type: 'v', row: 5, col: 6 }] },
+    { name: 'wall10', shape: 'L', segments: [{ type: 'h', row: 6, col: 7 }, { type: 'v', row: 5, col: 8 }] },
+    { name: 'wall11', shape: 'straight', segments: [{ type: 'h', row: 7, col: 0 }, { type: 'h', row: 7, col: 1 }] },
+    { name: 'wall12', shape: 'T', segments: [{ type: 'h', row: 7, col: 4 }, { type: 'h', row: 7, col: 5 }, { type: 'v', row: 7, col: 5 }, { type: 'h', row: 7, col: 6 }] },
+    { name: 'wall13', shape: 'L', segments: [{ type: 'h', row: 7, col: 8 }, { type: 'v', row: 6, col: 9 }, { type: 'v', row: 5, col: 9 }, { type: 'v', row: 4, col: 9 }] },
+    { name: 'wall14', shape: 'L', segments: [{ type: 'h', row: 8, col: 3 }, { type: 'v', row: 7, col: 3 }, { type: 'v', row: 6, col: 3 }] },
+    { name: 'wall15', shape: 'T', segments: [{ type: 'h', row: 8, col: 6 }, { type: 'h', row: 8, col: 7 }, { type: 'v', row: 8, col: 7 }, { type: 'h', row: 8, col: 8 }, { type: 'v', row: 8, col: 9 }] },
+    { name: 'wall16', shape: 'T', segments: [{ type: 'h', row: 9, col: 1 }, { type: 'h', row: 9, col: 2 }, { type: 'v', row: 8, col: 2 }] },
+    { name: 'wall17', shape: 'straight', segments: [{ type: 'h', row: 9, col: 4 }, { type: 'h', row: 9, col: 5 }] }
   ];
 
   const VERTICAL_WALLS = buildWallLines('v', 'col', 'rows');

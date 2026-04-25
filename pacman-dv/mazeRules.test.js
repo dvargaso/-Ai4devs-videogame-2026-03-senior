@@ -104,7 +104,7 @@ function classifyWallComponent(component) {
   if (hasBranch) return 'T';
   if (segmentTypes.size === 1) return 'straight';
   if (Math.max(...vertexDegrees) === 2) return 'L';
-  return 'invalid';
+  return 'other';
 }
 
 function isConnectedWallComponent(component) {
@@ -121,6 +121,41 @@ function isConnectedWallComponent(component) {
   }
 
   return seen.size === component.segments.length;
+}
+
+function getRenderedWallComponents() {
+  const segments = WALL_COMPONENTS.flatMap((component) => component.segments);
+  const renderedComponents = [];
+  const seen = new Set();
+
+  segments.forEach((segment, segmentIndex) => {
+    if (seen.has(segmentIndex)) {
+      return;
+    }
+
+    const queue = [segmentIndex];
+    const componentSegments = [];
+    seen.add(segmentIndex);
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex += 1) {
+      const currentSegment = segments[queue[queueIndex]];
+      componentSegments.push(currentSegment);
+
+      segments.forEach((candidateSegment, candidateIndex) => {
+        if (!seen.has(candidateIndex) && segmentsTouch(currentSegment, candidateSegment)) {
+          seen.add(candidateIndex);
+          queue.push(candidateIndex);
+        }
+      });
+    }
+
+    renderedComponents.push({
+      name: `renderedWall${renderedComponents.length + 1}`,
+      segments: componentSegments
+    });
+  });
+
+  return renderedComponents;
 }
 
 test('grid is exactly 10x10 with 100 playable positions', () => {
@@ -146,8 +181,8 @@ test('movement directions are limited to left, right, up, and down', () => {
   assert.deepEqual(DIRECTIONS.none, { row: 0, col: 0, angle: 0 });
 });
 
-test('walls are explicit straight, L, or T components with max length 5', () => {
-  const shapeCounts = { straight: 0, L: 0, T: 0 };
+test('authored walls are connected components with max length 5', () => {
+  const shapeCounts = { straight: 0, L: 0, T: 0, other: 0 };
 
   WALL_COMPONENTS.forEach((component) => {
     assert.ok(component.segments.length >= 2, `${component.name} is too short`);
@@ -156,7 +191,7 @@ test('walls are explicit straight, L, or T components with max length 5', () => 
 
     const actualShape = classifyWallComponent(component);
     assert.equal(actualShape, component.shape);
-    assert.ok(['straight', 'L', 'T'].includes(actualShape));
+    assert.ok(['straight', 'L', 'T', 'other'].includes(actualShape));
     shapeCounts[actualShape] += 1;
 
     component.segments.forEach((segment) => {
@@ -167,6 +202,23 @@ test('walls are explicit straight, L, or T components with max length 5', () => 
   assert.ok(shapeCounts.straight > 0, 'expected at least one straight wall');
   assert.ok(shapeCounts.L > 0, 'expected at least one L-shaped wall');
   assert.ok(shapeCounts.T > 0, 'expected at least one T-shaped wall');
+});
+
+test('rendered walls are 2 to 5 connected segments with L and T shapes present', () => {
+  const renderedComponents = getRenderedWallComponents();
+  const shapeCounts = { straight: 0, L: 0, T: 0, other: 0 };
+
+  renderedComponents.forEach((component) => {
+    assert.ok(component.segments.length >= 2, `${component.name} is too short`);
+    assert.ok(component.segments.length <= 5, `${component.name} is too long`);
+    assert.ok(isConnectedWallComponent(component), `${component.name} is not connected`);
+
+    const shape = classifyWallComponent(component);
+    shapeCounts[shape] += 1;
+  });
+
+  assert.ok(shapeCounts.L > 0, 'expected at least one rendered L-shaped wall');
+  assert.ok(shapeCounts.T > 0, 'expected at least one rendered T-shaped wall');
 });
 
 test('wall components create vertical and horizontal blockers', () => {
@@ -234,11 +286,11 @@ test('Pacman is never forced to reverse as the only way out', () => {
 });
 
 test('walls prevent direction changes where the requested path is blocked', () => {
-  const wallLimitedCell = { row: 0, col: 4 };
+  const wallLimitedCell = { row: 0, col: 5 };
 
-  assert.equal(canMove(wallLimitedCell, DIRECTIONS.right, false), true);
-  assert.equal(canMove(wallLimitedCell, DIRECTIONS.down, false), false);
-  assert.equal(chooseMovementDirection(wallLimitedCell, DIRECTIONS.right, DIRECTIONS.down, false), DIRECTIONS.right);
+  assert.equal(canMove(wallLimitedCell, DIRECTIONS.down, false), true);
+  assert.equal(canMove(wallLimitedCell, DIRECTIONS.right, false), false);
+  assert.equal(chooseMovementDirection(wallLimitedCell, DIRECTIONS.down, DIRECTIONS.right, false), DIRECTIONS.down);
 });
 
 test('Pacman changes direction when the requested path is open', () => {

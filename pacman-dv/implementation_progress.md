@@ -44,10 +44,11 @@ Goal:
 - Change Pacman movement from free movement to cell-by-cell movement.
 - Constrain Pacman movement by blocking movement across wall boundaries.
 - Treat walls as small islands/segments, not full path dividers.
-- Make each wall island a connected shape with 2 to 5 wall segments.
+- Make each rendered wall island a connected shape with 2 to 5 wall segments.
+- Prefer 3 to 5 wall segments for larger islands, while allowing 2-segment islands when needed to preserve corridor playability.
 - Allow straight, L-shaped, T-shaped, and similar 90-degree wall island shapes.
-- Require straight, L-shaped, and T-shaped walls to all be represented in the maze.
-- Enforce wall shape and max-length rules in `mazeRules.test.js`.
+- Require L-shaped and T-shaped walls to both be represented in the rendered maze.
+- Enforce rendered wall shape and length rules in `mazeRules.test.js`.
 - Keep openings as the default between neighboring cells unless a wall segment blocks movement.
 - Keep all cells reachable through internal grid paths without requiring edge tunnels.
 - Limit edge doors to a maximum of 3 per side; edge tunnels are escape routes, not the main navigation.
@@ -69,7 +70,7 @@ Manual test:
 - Confirm Pacman can reach all 100 grid positions by navigating through internal paths and door gaps.
 - Confirm Pacman does not need edge tunnels to escape any area.
 - Confirm Pacman never has to reverse as the only way out of a path.
-- Confirm straight paths allow 2 to 8 cells of movement before being blocked.
+- Confirm rendered wall islands are 2 to 5 connected segments, including L-shaped and T-shaped examples.
 - Confirm Pacman keeps moving in the current direction until a wall blocks him or a new valid direction is chosen.
 - Confirm each outer edge has only 3 tunnel doors.
 
