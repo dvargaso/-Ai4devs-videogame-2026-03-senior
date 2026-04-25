@@ -6,10 +6,19 @@ const {
   hasVerticalWall,
   hasHorizontalWall,
   getNextCell,
-  canMove,
   chooseMovementDirection,
   getCellCenter
 } = PacmanMazeRules;
+
+const {
+  POWER_MODE_DURATION,
+  collectPowerPellet,
+  updatePowerModeTime,
+  isPowerModeActive: hasActivePowerMode,
+  chooseGhostDirection: chooseGhostRuleDirection,
+  getGhostContactAction,
+  CONTACT_ACTIONS
+} = PacmanGameRules;
 
 const GAME_WIDTH = GRID_SIZE * CELL_SIZE;
 const GAME_HEIGHT = GRID_SIZE * CELL_SIZE;
@@ -17,23 +26,36 @@ const PACMAN_SPEED = 160;
 const PACMAN_RADIUS = 18;
 const GHOST_SPEED = 105;
 const GHOST_RADIUS = 17;
+const POWER_PELLET_RADIUS = 8;
 const MOUTH_ANIMATION_SPEED = 0.008;
 const MAX_MOUTH_OPENING = 0.75;
 const WALL_THICKNESS = 6;
 const WALL_COLOR = 0x163cff;
 const PATH_COLOR = 0x050505;
+const POWER_PELLET_COLOR = 0xfff6a0;
+const VULNERABLE_GHOST_COLOR = 0x243dff;
 const GHOST_SPAWNS = [
   { row: 8, col: 8, color: 0xff2f7d },
   { row: 1, col: 8, color: 0x00d7ff },
   { row: 8, col: 1, color: 0xff9f1c }
 ];
+const POWER_PELLET_CELLS = [
+  { row: 0, col: 1 },
+  { row: 0, col: 8 },
+  { row: 4, col: 4 },
+  { row: 5, col: 9 },
+  { row: 9, col: 1 },
+  { row: 9, col: 8 }
+];
 
 let pacman;
 let ghosts = [];
+let powerPellets = [];
 let mazeGraphics;
 let cursors;
 let statusText;
 let mouthTime = 0;
+let powerModeTimeRemaining = 0;
 let currentDirection = 0;
 let gridPosition = { row: 1, col: 1 };
 let requestedDirection = DIRECTIONS.none;
@@ -60,6 +82,8 @@ function create() {
   mazeGraphics = this.add.graphics();
   drawMaze();
 
+  powerPellets = POWER_PELLET_CELLS.map((cell) => createPowerPellet(this, cell));
+
   pacman = this.add.graphics();
   placePacmanAtCell(gridPosition);
 
@@ -80,6 +104,7 @@ function update(time, delta) {
     return;
   }
 
+  updatePowerMode(delta);
   updateRequestedDirection();
 
   if (!targetCell) {
@@ -95,6 +120,7 @@ function update(time, delta) {
   const mouthOpening = getMouthOpening();
   drawPacman(mouthOpening);
 
+  checkPowerPelletContact();
   updateGhosts(delta);
   checkGhostContact();
 }
@@ -218,13 +244,61 @@ function drawInteriorWalls() {
   }
 }
 
+function createPowerPellet(scene, cell) {
+  const pellet = {
+    graphics: scene.add.graphics(),
+    row: cell.row,
+    col: cell.col,
+    eaten: false
+  };
+  const center = getCellCenter(cell.row, cell.col);
+
+  pellet.graphics.x = center.x;
+  pellet.graphics.y = center.y;
+  pellet.graphics.fillStyle(POWER_PELLET_COLOR);
+  pellet.graphics.fillCircle(0, 0, POWER_PELLET_RADIUS);
+
+  return pellet;
+}
+
+function checkPowerPelletContact() {
+  const pellet = collectPowerPellet(powerPellets, gridPosition);
+
+  if (!pellet) {
+    return;
+  }
+
+  pellet.graphics.setVisible(false);
+  activatePowerMode();
+}
+
+function activatePowerMode() {
+  powerModeTimeRemaining = POWER_MODE_DURATION;
+  statusText.setText('POWER!');
+  ghosts.forEach((ghost) => drawGhost(ghost));
+}
+
+function updatePowerMode(delta) {
+  if (powerModeTimeRemaining <= 0) {
+    return;
+  }
+
+  powerModeTimeRemaining = updatePowerModeTime(powerModeTimeRemaining, delta);
+
+  if (powerModeTimeRemaining === 0) {
+    statusText.setText('');
+    ghosts.forEach((ghost) => drawGhost(ghost));
+  }
+}
+
 function createGhost(scene, spawn) {
   const ghost = {
     graphics: scene.add.graphics(),
     color: spawn.color,
     gridPosition: { row: spawn.row, col: spawn.col },
     movementDirection: DIRECTIONS.none,
-    targetCell: null
+    targetCell: null,
+    isAlive: true
   };
 
   placeGhostAtCell(ghost, ghost.gridPosition);
@@ -235,6 +309,10 @@ function createGhost(scene, spawn) {
 
 function updateGhosts(delta) {
   ghosts.forEach((ghost) => {
+    if (!ghost.isAlive) {
+      return;
+    }
+
     if (!ghost.targetCell) {
       chooseGhostNextCell(ghost);
     }
@@ -263,25 +341,7 @@ function chooseGhostNextCell(ghost) {
 }
 
 function chooseGhostDirection(ghost) {
-  const openDirections = [DIRECTIONS.up, DIRECTIONS.left, DIRECTIONS.down, DIRECTIONS.right]
-    .filter((direction) => canMove(ghost.gridPosition, direction));
-
-  if (openDirections.length === 0) {
-    return DIRECTIONS.none;
-  }
-
-  const forwardChoices = openDirections.filter((direction) => !isOppositeDirection(direction, ghost.movementDirection));
-  const choices = forwardChoices.length > 0 ? forwardChoices : openDirections;
-
-  return choices
-    .map((direction) => {
-      const nextCell = getNextCell(ghost.gridPosition, direction);
-      return {
-        direction,
-        distance: getGridDistance(nextCell, gridPosition)
-      };
-    })
-    .sort((first, second) => first.distance - second.distance)[0].direction;
+  return chooseGhostRuleDirection(ghost, gridPosition, isPowerModeActive());
 }
 
 function moveGhostTowardTarget(ghost, delta) {
@@ -312,8 +372,14 @@ function placeGhostAtCell(ghost, cell) {
 }
 
 function drawGhost(ghost) {
+  if (!ghost.isAlive) {
+    ghost.graphics.setVisible(false);
+    return;
+  }
+
+  ghost.graphics.setVisible(true);
   ghost.graphics.clear();
-  ghost.graphics.fillStyle(ghost.color);
+  ghost.graphics.fillStyle(isPowerModeActive() ? VULNERABLE_GHOST_COLOR : ghost.color);
   ghost.graphics.fillCircle(0, -3, GHOST_RADIUS);
   ghost.graphics.fillRect(-GHOST_RADIUS, -3, GHOST_RADIUS * 2, GHOST_RADIUS + 8);
 
@@ -334,11 +400,14 @@ function drawGhost(ghost) {
 }
 
 function checkGhostContact() {
-  const touchedGhost = ghosts.some((ghost) => {
-    return ghost.gridPosition.row === gridPosition.row && ghost.gridPosition.col === gridPosition.col;
-  });
+  const contactAction = getGhostContactAction(ghosts, gridPosition, isPowerModeActive());
 
-  if (!touchedGhost) {
+  if (contactAction.type === CONTACT_ACTIONS.none) {
+    return;
+  }
+
+  if (contactAction.type === CONTACT_ACTIONS.kill) {
+    killGhost(contactAction.ghost);
     return;
   }
 
@@ -348,12 +417,15 @@ function checkGhostContact() {
   statusText.setText('CAUGHT!');
 }
 
-function isOppositeDirection(firstDirection, secondDirection) {
-  return firstDirection.row + secondDirection.row === 0 && firstDirection.col + secondDirection.col === 0;
+function killGhost(ghost) {
+  ghost.isAlive = false;
+  ghost.targetCell = null;
+  ghost.movementDirection = DIRECTIONS.none;
+  ghost.graphics.setVisible(false);
 }
 
-function getGridDistance(firstCell, secondCell) {
-  return Math.abs(firstCell.row - secondCell.row) + Math.abs(firstCell.col - secondCell.col);
+function isPowerModeActive() {
+  return hasActivePowerMode(powerModeTimeRemaining);
 }
 
 function getMouthOpening() {

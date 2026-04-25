@@ -4,13 +4,14 @@ We will build the game in small, testable phases. We will only move to the next 
 
 ## Project Rules
 
-- Use plain `index.html`, `style.css`, and `game.js`.
+- Use plain `index.html`, `style.css`, and JavaScript files.
 - Load Phaser 3 from a CDN.
 - Do not use npm, bundlers, frameworks, backend code, or external asset files.
 - Keep each phase small, readable, and manually testable.
 - Preserve existing working behavior when adding new features.
 - Stop after each phase and wait for explicit approval before continuing.
 - Run `node mazeRules.test.js` from `pacman-dv` after changes that affect maze or movement rules.
+- Run `node gameRules.test.js` from `pacman-dv` after changes that affect ghosts, power pellets, power mode, or contact rules.
 
 ## Phase 1: Phaser Canvas and Free Pacman Movement
 
@@ -102,7 +103,7 @@ Known limitations:
 
 ## Phase 4: Power Pellets and Vulnerable Ghosts
 
-Status: Not started
+Status: Ready for testing
 
 Goal:
 - Add 5 to 8 power pellets to valid walkable cells.
@@ -111,11 +112,13 @@ Goal:
 - Make ghosts vulnerable during power mode.
 - Make vulnerable ghosts run away from Pacman using simple grid logic.
 - Allow Pacman to kill vulnerable ghosts on contact.
+- Cover ghost chase/flee, power pellet, power timer, and contact rules in `gameRules.test.js`.
 
 Manual test:
 - Confirm power pellets disappear when eaten.
-- Confirm power mode lasts about 10 seconds.
+- Confirm power mode shows the `POWER!` state and lasts about 10 seconds.
 - Confirm ghosts visibly change state while vulnerable.
+- Confirm vulnerable ghosts try to move away from Pacman.
 - Confirm Pacman can kill ghosts only during power mode.
 
 Known limitations:
