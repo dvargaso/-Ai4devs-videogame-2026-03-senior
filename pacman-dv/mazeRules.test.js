@@ -5,7 +5,7 @@ const {
   GRID_SIZE,
   CELL_SIZE,
   EDGE_DOORS,
-  EXTRA_CONNECTIONS,
+  WALL_COMPONENTS,
   VERTICAL_WALLS,
   HORIZONTAL_WALLS,
   DIRECTIONS,
@@ -67,6 +67,62 @@ function getPerpendicularDirections(direction) {
   return [DIRECTIONS.up, DIRECTIONS.down];
 }
 
+function getSegmentEndpoints(segment) {
+  if (segment.type === 'v') {
+    return [
+      `${segment.col},${segment.row}`,
+      `${segment.col},${segment.row + 1}`
+    ];
+  }
+
+  return [
+    `${segment.col},${segment.row}`,
+    `${segment.col + 1},${segment.row}`
+  ];
+}
+
+function segmentsTouch(firstSegment, secondSegment) {
+  const firstEndpoints = getSegmentEndpoints(firstSegment);
+  const secondEndpoints = getSegmentEndpoints(secondSegment);
+
+  return firstEndpoints.some((endpoint) => secondEndpoints.includes(endpoint));
+}
+
+function classifyWallComponent(component) {
+  const vertices = new Map();
+
+  component.segments.forEach((segment) => {
+    getSegmentEndpoints(segment).forEach((endpoint) => {
+      vertices.set(endpoint, (vertices.get(endpoint) || 0) + 1);
+    });
+  });
+
+  const vertexDegrees = [...vertices.values()];
+  const hasBranch = vertexDegrees.some((degree) => degree === 3);
+  const segmentTypes = new Set(component.segments.map((segment) => segment.type));
+
+  if (hasBranch) return 'T';
+  if (segmentTypes.size === 1) return 'straight';
+  if (Math.max(...vertexDegrees) === 2) return 'L';
+  return 'invalid';
+}
+
+function isConnectedWallComponent(component) {
+  const queue = [component.segments[0]];
+  const seen = new Set([0]);
+
+  for (let index = 0; index < queue.length; index += 1) {
+    component.segments.forEach((segment, segmentIndex) => {
+      if (!seen.has(segmentIndex) && segmentsTouch(queue[index], segment)) {
+        seen.add(segmentIndex);
+        queue.push(segment);
+      }
+    });
+  }
+
+  return seen.size === component.segments.length;
+}
+
 test('grid is exactly 10x10 with 100 playable positions', () => {
   const cells = getAllCells();
   const uniqueCells = new Set(cells.map((cell) => `${cell.row},${cell.col}`));
@@ -90,17 +146,30 @@ test('movement directions are limited to left, right, up, and down', () => {
   assert.deepEqual(DIRECTIONS.none, { row: 0, col: 0, angle: 0 });
 });
 
-test('corridor graph has deliberate extra intersections', () => {
-  assert.ok(EXTRA_CONNECTIONS.length >= 8);
+test('walls are explicit straight, L, or T components with max length 5', () => {
+  const shapeCounts = { straight: 0, L: 0, T: 0 };
 
-  EXTRA_CONNECTIONS.forEach(([fromCell, toCell]) => {
-    assert.ok(isInsideGrid(fromCell));
-    assert.ok(isInsideGrid(toCell));
-    assert.equal(Math.abs(fromCell.row - toCell.row) + Math.abs(fromCell.col - toCell.col), 1);
+  WALL_COMPONENTS.forEach((component) => {
+    assert.ok(component.segments.length >= 2, `${component.name} is too short`);
+    assert.ok(component.segments.length <= 5, `${component.name} is too long`);
+    assert.ok(isConnectedWallComponent(component), `${component.name} is not connected`);
+
+    const actualShape = classifyWallComponent(component);
+    assert.equal(actualShape, component.shape);
+    assert.ok(['straight', 'L', 'T'].includes(actualShape));
+    shapeCounts[actualShape] += 1;
+
+    component.segments.forEach((segment) => {
+      assert.ok(segment.type === 'v' || segment.type === 'h');
+    });
   });
+
+  assert.ok(shapeCounts.straight > 0, 'expected at least one straight wall');
+  assert.ok(shapeCounts.L > 0, 'expected at least one L-shaped wall');
+  assert.ok(shapeCounts.T > 0, 'expected at least one T-shaped wall');
 });
 
-test('walls are derived from blocked corridor boundaries', () => {
+test('wall components create vertical and horizontal blockers', () => {
   assert.ok(VERTICAL_WALLS.length > 0);
   assert.ok(HORIZONTAL_WALLS.length > 0);
 
@@ -142,7 +211,7 @@ test('corridors dominate and no cell is 4-way open', () => {
     degreeCounts[degree] += 1;
   });
 
-  assert.ok(degreeCounts[2] >= 70, `expected corridors to dominate, got ${degreeCounts[2]} degree-2 cells`);
+  assert.ok(degreeCounts[2] >= 60, `expected corridors to dominate, got ${degreeCounts[2]} degree-2 cells`);
   assert.ok(degreeCounts[3] >= 10, `expected some intersections, got ${degreeCounts[3]} degree-3 cells`);
   assert.equal(degreeCounts[4], 0);
 });

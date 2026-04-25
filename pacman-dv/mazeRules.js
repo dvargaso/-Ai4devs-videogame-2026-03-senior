@@ -17,22 +17,27 @@
     left: [1, 5, 8]
   };
 
-  const EXTRA_CONNECTIONS = [
-    [{ row: 0, col: 2 }, { row: 1, col: 2 }],
-    [{ row: 0, col: 5 }, { row: 1, col: 5 }],
-    [{ row: 1, col: 4 }, { row: 2, col: 4 }],
-    [{ row: 2, col: 6 }, { row: 3, col: 6 }],
-    [{ row: 3, col: 3 }, { row: 4, col: 3 }],
-    [{ row: 4, col: 7 }, { row: 5, col: 7 }],
-    [{ row: 5, col: 2 }, { row: 6, col: 2 }],
-    [{ row: 6, col: 5 }, { row: 7, col: 5 }],
-    [{ row: 7, col: 8 }, { row: 8, col: 8 }],
-    [{ row: 8, col: 4 }, { row: 9, col: 4 }],
-    [{ row: 2, col: 0 }, { row: 2, col: 1 }],
-    [{ row: 4, col: 0 }, { row: 4, col: 1 }]
+  const WALL_COMPONENTS = [
+    { name: 'wall1', shape: 'L', segments: [{ type: 'v', row: 1, col: 1 }, { type: 'h', row: 1, col: 1 }] },
+    { name: 'wall2', shape: 'straight', segments: [{ type: 'h', row: 3, col: 1 }, { type: 'h', row: 3, col: 2 }, { type: 'h', row: 3, col: 3 }, { type: 'h', row: 3, col: 4 }, { type: 'h', row: 3, col: 5 }] },
+    { name: 'wall3', shape: 'T', segments: [{ type: 'v', row: 5, col: 1 }, { type: 'v', row: 6, col: 1 }, { type: 'h', row: 5, col: 1 }, { type: 'h', row: 5, col: 2 }, { type: 'v', row: 4, col: 1 }] },
+    { name: 'wall4', shape: 'straight', segments: [{ type: 'h', row: 7, col: 1 }, { type: 'h', row: 7, col: 2 }, { type: 'h', row: 7, col: 3 }, { type: 'h', row: 7, col: 4 }] },
+    { name: 'wall5', shape: 'straight', segments: [{ type: 'h', row: 9, col: 1 }, { type: 'h', row: 9, col: 2 }, { type: 'h', row: 9, col: 3 }] },
+    { name: 'wall6', shape: 'straight', segments: [{ type: 'h', row: 5, col: 4 }, { type: 'h', row: 5, col: 5 }, { type: 'h', row: 5, col: 6 }] },
+    { name: 'wall7', shape: 'straight', segments: [{ type: 'v', row: 7, col: 1 }, { type: 'v', row: 8, col: 1 }] },
+    { name: 'wall8', shape: 'straight', segments: [{ type: 'h', row: 1, col: 3 }, { type: 'h', row: 1, col: 4 }] },
+    { name: 'wall9', shape: 'straight', segments: [{ type: 'h', row: 1, col: 6 }, { type: 'h', row: 1, col: 7 }, { type: 'h', row: 1, col: 8 }] },
+    { name: 'wall10', shape: 'straight', segments: [{ type: 'h', row: 2, col: 2 }, { type: 'h', row: 2, col: 3 }] },
+    { name: 'wall11', shape: 'straight', segments: [{ type: 'h', row: 2, col: 5 }, { type: 'h', row: 2, col: 6 }, { type: 'h', row: 2, col: 7 }, { type: 'h', row: 2, col: 8 }, { type: 'h', row: 2, col: 9 }] },
+    { name: 'wall12', shape: 'straight', segments: [{ type: 'h', row: 3, col: 7 }, { type: 'h', row: 3, col: 8 }] },
+    { name: 'wall13', shape: 'straight', segments: [{ type: 'h', row: 4, col: 3 }, { type: 'h', row: 4, col: 4 }, { type: 'h', row: 4, col: 5 }, { type: 'h', row: 4, col: 6 }, { type: 'h', row: 4, col: 7 }] },
+    { name: 'wall14', shape: 'straight', segments: [{ type: 'h', row: 6, col: 3 }, { type: 'h', row: 6, col: 4 }, { type: 'h', row: 6, col: 5 }, { type: 'h', row: 6, col: 6 }, { type: 'h', row: 6, col: 7 }] },
+    { name: 'wall15', shape: 'straight', segments: [{ type: 'h', row: 7, col: 6 }, { type: 'h', row: 7, col: 7 }, { type: 'h', row: 7, col: 8 }] },
+    { name: 'wall16', shape: 'straight', segments: [{ type: 'h', row: 8, col: 2 }, { type: 'h', row: 8, col: 3 }, { type: 'h', row: 8, col: 4 }, { type: 'h', row: 8, col: 5 }, { type: 'h', row: 8, col: 6 }] },
+    { name: 'wall17', shape: 'straight', segments: [{ type: 'h', row: 9, col: 5 }, { type: 'h', row: 9, col: 6 }, { type: 'h', row: 9, col: 7 }, { type: 'h', row: 9, col: 8 }] },
+    { name: 'wall18', shape: 'L', segments: [{ type: 'h', row: 5, col: 8 }, { type: 'v', row: 4, col: 8 }, { type: 'h', row: 5, col: 9 }] }
   ];
 
-  const OPEN_CONNECTIONS = buildOpenConnections();
   const VERTICAL_WALLS = buildWallLines('v', 'col', 'rows');
   const HORIZONTAL_WALLS = buildWallLines('h', 'row', 'cols');
 
@@ -52,77 +57,16 @@
     return EDGE_DOORS[edge].includes(position);
   }
 
-  function buildOpenConnections() {
-    const connections = new Set();
-    const cyclePath = buildHamiltonianCyclePath();
-
-    for (let index = 0; index < cyclePath.length; index += 1) {
-      const fromCell = cyclePath[index];
-      const toCell = cyclePath[(index + 1) % cyclePath.length];
-      connections.add(connectionKey(fromCell, toCell));
-    }
-
-    EXTRA_CONNECTIONS.forEach(([fromCell, toCell]) => {
-      connections.add(connectionKey(fromCell, toCell));
-    });
-
-    return connections;
-  }
-
-  function buildHamiltonianCyclePath() {
-    const path = [];
-
-    path.push({ row: 0, col: 0 });
-
-    for (let col = 1; col < GRID_SIZE; col += 1) {
-      path.push({ row: 0, col });
-    }
-
-    for (let row = 1; row < GRID_SIZE; row += 1) {
-      if (row % 2 === 1) {
-        for (let col = GRID_SIZE - 1; col >= 1; col -= 1) {
-          path.push({ row, col });
-        }
-      } else {
-        for (let col = 1; col < GRID_SIZE; col += 1) {
-          path.push({ row, col });
-        }
-      }
-    }
-
-    for (let row = GRID_SIZE - 1; row >= 1; row -= 1) {
-      path.push({ row, col: 0 });
-    }
-
-    return path;
-  }
-
   function buildWallLines(type, lineKey, positionsKey) {
     const lines = new Map();
 
-    if (type === 'v') {
-      for (let row = 0; row < GRID_SIZE; row += 1) {
-        for (let col = 1; col < GRID_SIZE; col += 1) {
-          const fromCell = { row, col: col - 1 };
-          const toCell = { row, col };
-
-          if (!hasOpenConnection(fromCell, toCell)) {
-            addWallPosition(lines, col, row);
-          }
-        }
-      }
-    } else {
-      for (let row = 1; row < GRID_SIZE; row += 1) {
-        for (let col = 0; col < GRID_SIZE; col += 1) {
-          const fromCell = { row: row - 1, col };
-          const toCell = { row, col };
-
-          if (!hasOpenConnection(fromCell, toCell)) {
-            addWallPosition(lines, row, col);
-          }
-        }
-      }
-    }
+    WALL_COMPONENTS.forEach((component) => {
+      component.segments
+        .filter((segment) => segment.type === type)
+        .forEach((segment) => {
+          addWallPosition(lines, segment[lineKey], type === 'v' ? segment.row : segment.col);
+        });
+    });
 
     return [...lines.entries()]
       .map(([line, positions]) => ({
@@ -138,17 +82,6 @@
     }
 
     lines.get(line).push(position);
-  }
-
-  function hasOpenConnection(fromCell, toCell) {
-    return OPEN_CONNECTIONS.has(connectionKey(fromCell, toCell));
-  }
-
-  function connectionKey(fromCell, toCell) {
-    const firstKey = cellKey(fromCell);
-    const secondKey = cellKey(toCell);
-
-    return firstKey < secondKey ? `${firstKey}|${secondKey}` : `${secondKey}|${firstKey}`;
   }
 
   function hasVerticalWall(row, col) {
@@ -211,7 +144,7 @@
       return true;
     }
 
-    return hasOpenConnection(fromCell, nextCell);
+    return !hasWallBetween(fromCell, nextCell);
   }
 
   function chooseMovementDirection(fromCell, currentDirection, requestedDirection, allowEdgeTunnels = true) {
@@ -277,8 +210,7 @@
     GRID_SIZE,
     CELL_SIZE,
     EDGE_DOORS,
-    EXTRA_CONNECTIONS,
-    OPEN_CONNECTIONS,
+    WALL_COMPONENTS,
     VERTICAL_WALLS,
     HORIZONTAL_WALLS,
     DIRECTIONS,

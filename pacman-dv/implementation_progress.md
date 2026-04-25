@@ -46,6 +46,8 @@ Goal:
 - Treat walls as small islands/segments, not full path dividers.
 - Make each wall island a connected shape with 2 to 5 wall segments.
 - Allow straight, L-shaped, T-shaped, and similar 90-degree wall island shapes.
+- Require straight, L-shaped, and T-shaped walls to all be represented in the maze.
+- Enforce wall shape and max-length rules in `mazeRules.test.js`.
 - Keep openings as the default between neighboring cells unless a wall segment blocks movement.
 - Keep all cells reachable through internal grid paths without requiring edge tunnels.
 - Limit edge doors to a maximum of 3 per side; edge tunnels are escape routes, not the main navigation.
