@@ -13,11 +13,17 @@ const {
 
 const {
   POWER_MODE_DURATION,
+  STARTING_LIVES,
   createDotCells,
   collectDot,
   getRemainingDots,
   isLevelWon,
   addDotScore,
+  loseLife,
+  isGameOver,
+  getNextLevel,
+  isFinalLevel,
+  getGhostSpeed,
   collectPowerPellet,
   updatePowerModeTime,
   isPowerModeActive: hasActivePowerMode,
@@ -66,10 +72,14 @@ let mazeGraphics;
 let cursors;
 let scoreText;
 let remainingDotsText;
+let livesText;
+let levelText;
 let statusText;
 let mouthTime = 0;
 let powerModeTimeRemaining = 0;
 let score = 0;
+let lives = STARTING_LIVES;
+let level = 1;
 let currentDirection = 0;
 let gridPosition = { row: 1, col: 1 };
 let requestedDirection = DIRECTIONS.none;
@@ -77,6 +87,7 @@ let movementDirection = DIRECTIONS.none;
 let targetCell = null;
 let isCaught = false;
 let levelWon = false;
+let finalWin = false;
 
 const config = {
   type: Phaser.AUTO,
@@ -96,6 +107,8 @@ function create() {
   cursors = this.input.keyboard.createCursorKeys();
   scoreText = document.getElementById('score-counter');
   remainingDotsText = document.getElementById('dots-left-counter');
+  livesText = document.getElementById('lives-counter');
+  levelText = document.getElementById('level-counter');
   mazeGraphics = this.add.graphics();
   drawMaze();
 
@@ -120,7 +133,7 @@ function create() {
 }
 
 function update(time, delta) {
-  if (isCaught || levelWon) {
+  if (isCaught || levelWon || finalWin) {
     return;
   }
 
@@ -305,13 +318,23 @@ function checkDotContact() {
 function updateHud() {
   scoreText.textContent = `Score: ${score}`;
   remainingDotsText.textContent = `Dots left: ${getRemainingDots(dots)}`;
+  livesText.textContent = `Lives: ${lives}`;
+  levelText.textContent = `Level: ${level}`;
 }
 
 function winLevel() {
+  if (isFinalLevel(level)) {
+    finalWin = true;
+    movementDirection = DIRECTIONS.none;
+    targetCell = null;
+    statusText.setText('YOU WIN!');
+    return;
+  }
+
   levelWon = true;
-  movementDirection = DIRECTIONS.none;
-  targetCell = null;
-  statusText.setText('LEVEL CLEAR!');
+  level = getNextLevel(level);
+  resetLevelState();
+  statusText.setText(`LEVEL ${level}`);
 }
 
 function createPowerPellet(scene, cell) {
@@ -416,7 +439,7 @@ function chooseGhostDirection(ghost) {
 
 function moveGhostTowardTarget(ghost, delta) {
   const targetPixel = getCellCenter(ghost.targetCell.row, ghost.targetCell.col);
-  const distanceThisFrame = GHOST_SPEED * (delta / 1000);
+  const distanceThisFrame = getGhostSpeed(GHOST_SPEED, level) * (delta / 1000);
   const distanceToTarget = Phaser.Math.Distance.Between(
     ghost.graphics.x,
     ghost.graphics.y,
@@ -482,9 +505,17 @@ function checkGhostContact() {
   }
 
   isCaught = true;
-  movementDirection = DIRECTIONS.none;
-  targetCell = null;
-  statusText.setText('CAUGHT!');
+  lives = loseLife(lives);
+  updateHud();
+
+  if (isGameOver(lives)) {
+    resetFullGame();
+    statusText.setText('GAME OVER - RESTART');
+    return;
+  }
+
+  resetPositionsAfterLifeLoss();
+  statusText.setText('LIFE LOST');
 }
 
 function killGhost(ghost) {
@@ -496,6 +527,80 @@ function killGhost(ghost) {
 
 function isPowerModeActive() {
   return hasActivePowerMode(powerModeTimeRemaining);
+}
+
+function resetPositionsAfterLifeLoss() {
+  isCaught = false;
+  gridPosition = { row: 1, col: 1 };
+  requestedDirection = DIRECTIONS.none;
+  movementDirection = DIRECTIONS.none;
+  targetCell = null;
+  currentDirection = 0;
+  powerModeTimeRemaining = 0;
+  placePacmanAtCell(gridPosition);
+  ghosts.forEach((ghost, index) => {
+    if (!ghost.isAlive) {
+      return;
+    }
+
+    resetGhostToSpawn(ghost, GHOST_SPAWNS[index]);
+    drawGhost(ghost);
+  });
+  drawPacman(0);
+}
+
+function resetLevelState() {
+  gridPosition = { row: 1, col: 1 };
+  requestedDirection = DIRECTIONS.none;
+  movementDirection = DIRECTIONS.none;
+  targetCell = null;
+  currentDirection = 0;
+  powerModeTimeRemaining = 0;
+  isCaught = false;
+  levelWon = false;
+  finalWin = false;
+  resetDots();
+  resetPowerPellets();
+  resetGhosts();
+  placePacmanAtCell(gridPosition);
+  drawPacman(0);
+  updateHud();
+}
+
+function resetFullGame() {
+  score = 0;
+  lives = STARTING_LIVES;
+  level = 1;
+  resetLevelState();
+}
+
+function resetDots() {
+  dots.forEach((dot) => {
+    dot.eaten = false;
+    dot.graphics.setVisible(true);
+  });
+}
+
+function resetPowerPellets() {
+  powerPellets.forEach((pellet) => {
+    pellet.eaten = false;
+    pellet.graphics.setVisible(true);
+  });
+}
+
+function resetGhosts() {
+  ghosts.forEach((ghost, index) => {
+    ghost.isAlive = true;
+    resetGhostToSpawn(ghost, GHOST_SPAWNS[index]);
+    drawGhost(ghost);
+  });
+}
+
+function resetGhostToSpawn(ghost, spawn) {
+  ghost.gridPosition = { row: spawn.row, col: spawn.col };
+  ghost.movementDirection = DIRECTIONS.none;
+  ghost.targetCell = null;
+  placeGhostAtCell(ghost, ghost.gridPosition);
 }
 
 function getMouthOpening() {

@@ -12,6 +12,9 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (mazeRules) {
   const POWER_MODE_DURATION = 10000;
   const DOT_SCORE = 10;
+  const STARTING_LIVES = 3;
+  const MAX_LEVEL = 3;
+  const GHOST_SPEED_MULTIPLIER = 1.25;
   const CONTACT_ACTIONS = {
     none: 'none',
     caught: 'caught',
@@ -66,6 +69,26 @@
 
   function addDotScore(score) {
     return score + DOT_SCORE;
+  }
+
+  function loseLife(lives) {
+    return Math.max(0, lives - 1);
+  }
+
+  function isGameOver(lives) {
+    return lives <= 0;
+  }
+
+  function getNextLevel(level) {
+    return Math.min(MAX_LEVEL, level + 1);
+  }
+
+  function isFinalLevel(level) {
+    return level >= MAX_LEVEL;
+  }
+
+  function getGhostSpeed(baseSpeed, level) {
+    return baseSpeed * (GHOST_SPEED_MULTIPLIER ** (level - 1));
   }
 
   function updatePowerModeTime(timeRemaining, delta) {
@@ -135,6 +158,9 @@
   return {
     POWER_MODE_DURATION,
     DOT_SCORE,
+    STARTING_LIVES,
+    MAX_LEVEL,
+    GHOST_SPEED_MULTIPLIER,
     CONTACT_ACTIONS,
     collectPowerPellet,
     createDotCells,
@@ -142,6 +168,11 @@
     getRemainingDots,
     isLevelWon,
     addDotScore,
+    loseLife,
+    isGameOver,
+    getNextLevel,
+    isFinalLevel,
+    getGhostSpeed,
     updatePowerModeTime,
     isPowerModeActive,
     chooseGhostDirection,

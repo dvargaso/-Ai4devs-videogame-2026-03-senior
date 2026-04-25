@@ -127,7 +127,7 @@ Known limitations:
 
 ## Phase 5: Dots, Score, and Level Win Condition
 
-Status: Ready for testing
+Status: Completed
 
 Goal:
 - Add dots to every grid cell except power pellet cells.
@@ -150,7 +150,7 @@ Known limitations:
 
 ## Phase 6: Lives, Level Progression, and Ghost Speed Scaling
 
-Status: Not started
+Status: Ready for testing
 
 Goal:
 - Add 3 lives.
@@ -161,6 +161,7 @@ Goal:
 - Keep the same maze for all levels.
 - Increase ghost speed by 25% each level.
 - Show a final win state after completing level 3.
+- Cover lives, game over, level progression, and speed scaling rules in `gameRules.test.js`.
 
 Manual test:
 - Confirm dangerous ghost contact removes one life.

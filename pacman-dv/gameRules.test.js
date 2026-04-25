@@ -6,12 +6,20 @@ const {
 const {
   POWER_MODE_DURATION,
   DOT_SCORE,
+  STARTING_LIVES,
+  MAX_LEVEL,
+  GHOST_SPEED_MULTIPLIER,
   CONTACT_ACTIONS,
   createDotCells,
   collectDot,
   getRemainingDots,
   isLevelWon,
   addDotScore,
+  loseLife,
+  isGameOver,
+  getNextLevel,
+  isFinalLevel,
+  getGhostSpeed,
   isExcludedCell,
   collectPowerPellet,
   updatePowerModeTime,
@@ -115,6 +123,34 @@ test('level is won only after all dots are eaten', () => {
   dots[1].eaten = true;
   assert.equal(isLevelWon(dots), true);
   assert.equal(isLevelWon([]), false);
+});
+
+test('lives start at 3, decrease on dangerous contact, and stop at zero', () => {
+  assert.equal(STARTING_LIVES, 3);
+  assert.equal(loseLife(3), 2);
+  assert.equal(loseLife(1), 0);
+  assert.equal(loseLife(0), 0);
+});
+
+test('game over starts only after all lives are gone', () => {
+  assert.equal(isGameOver(1), false);
+  assert.equal(isGameOver(0), true);
+});
+
+test('level progression advances through exactly 3 levels', () => {
+  assert.equal(MAX_LEVEL, 3);
+  assert.equal(getNextLevel(1), 2);
+  assert.equal(getNextLevel(2), 3);
+  assert.equal(getNextLevel(3), 3);
+  assert.equal(isFinalLevel(2), false);
+  assert.equal(isFinalLevel(3), true);
+});
+
+test('ghost speed increases by 25 percent per level', () => {
+  assert.equal(GHOST_SPEED_MULTIPLIER, 1.25);
+  assert.equal(getGhostSpeed(100, 1), 100);
+  assert.equal(getGhostSpeed(100, 2), 125);
+  assert.equal(getGhostSpeed(100, 3), 156.25);
 });
 
 test('normal ghosts choose an open direction that moves closer to Pacman', () => {
