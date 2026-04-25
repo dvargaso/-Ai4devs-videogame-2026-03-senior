@@ -38,18 +38,35 @@ const GAME_WIDTH = GRID_WIDTH;
 const GAME_HEIGHT = GRID_HEIGHT;
 const PACMAN_SPEED = 160;
 const PACMAN_RADIUS = 18;
-const GHOST_SPEED = 105;
 const GHOST_RADIUS = 17;
 const DOT_RADIUS = 3;
 const POWER_PELLET_RADIUS = 8;
 const MOUTH_ANIMATION_SPEED = 0.008;
 const MAX_MOUTH_OPENING = 0.75;
+const GAME_CONFIG = {
+  baseGhostSpeed: 131.25,
+  powerBlinkInterval: 180,
+  musicVolume: 0.04,
+  musicStepMs: 220,
+  powerMusicStepMs: 155
+};
 const WALL_THICKNESS = 6;
 const WALL_COLOR = 0x163cff;
 const PATH_COLOR = 0x050505;
 const DOT_COLOR = 0xffe3b0;
 const POWER_PELLET_COLOR = 0xfff6a0;
 const VULNERABLE_GHOST_COLOR = 0x243dff;
+const VULNERABLE_GHOST_BLINK_COLOR = 0xffffff;
+const MUSIC_NOTES = [
+  261.63,
+  329.63,
+  392.00,
+  329.63,
+  293.66,
+  369.99,
+  440.00,
+  369.99
+];
 const GHOST_SPAWNS = [
   { row: 8, col: 8, color: 0xff2f7d },
   { row: 1, col: 8, color: 0x00d7ff },
@@ -75,6 +92,9 @@ let remainingDotsText;
 let livesText;
 let levelText;
 let statusText;
+let audioContext = null;
+let musicGain = null;
+let musicStepIndex = 0;
 let mouthTime = 0;
 let powerModeTimeRemaining = 0;
 let score = 0;
@@ -105,6 +125,8 @@ new Phaser.Game(config);
 
 function create() {
   cursors = this.input.keyboard.createCursorKeys();
+  this.input.keyboard.once('keydown', startMusic);
+  this.input.once('pointerdown', startMusic);
   scoreText = document.getElementById('score-counter');
   remainingDotsText = document.getElementById('dots-left-counter');
   livesText = document.getElementById('lives-counter');
@@ -156,6 +178,7 @@ function update(time, delta) {
   checkDotContact();
   checkPowerPelletContact();
   updateGhosts(delta);
+  updateGhostVisuals(time);
   checkGhostContact();
 }
 
@@ -439,7 +462,7 @@ function chooseGhostDirection(ghost) {
 
 function moveGhostTowardTarget(ghost, delta) {
   const targetPixel = getCellCenter(ghost.targetCell.row, ghost.targetCell.col);
-  const distanceThisFrame = getGhostSpeed(GHOST_SPEED, level) * (delta / 1000);
+  const distanceThisFrame = getGhostSpeed(GAME_CONFIG.baseGhostSpeed, level) * (delta / 1000);
   const distanceToTarget = Phaser.Math.Distance.Between(
     ghost.graphics.x,
     ghost.graphics.y,
@@ -472,7 +495,7 @@ function drawGhost(ghost) {
 
   ghost.graphics.setVisible(true);
   ghost.graphics.clear();
-  ghost.graphics.fillStyle(isPowerModeActive() ? VULNERABLE_GHOST_COLOR : ghost.color);
+  ghost.graphics.fillStyle(getGhostColor(ghost));
   ghost.graphics.fillCircle(0, -3, GHOST_RADIUS);
   ghost.graphics.fillRect(-GHOST_RADIUS, -3, GHOST_RADIUS * 2, GHOST_RADIUS + 8);
 
@@ -490,6 +513,25 @@ function drawGhost(ghost) {
   ghost.graphics.fillStyle(0xffffff);
   ghost.graphics.fillCircle(-6, -5, 4);
   ghost.graphics.fillCircle(6, -5, 4);
+}
+
+function updateGhostVisuals(time) {
+  if (!isPowerModeActive()) {
+    return;
+  }
+
+  ghosts.forEach((ghost) => {
+    ghost.blinkOn = Math.floor(time / GAME_CONFIG.powerBlinkInterval) % 2 === 0;
+    drawGhost(ghost);
+  });
+}
+
+function getGhostColor(ghost) {
+  if (!isPowerModeActive()) {
+    return ghost.color;
+  }
+
+  return ghost.blinkOn ? VULNERABLE_GHOST_BLINK_COLOR : VULNERABLE_GHOST_COLOR;
 }
 
 function checkGhostContact() {
@@ -601,6 +643,54 @@ function resetGhostToSpawn(ghost, spawn) {
   ghost.movementDirection = DIRECTIONS.none;
   ghost.targetCell = null;
   placeGhostAtCell(ghost, ghost.gridPosition);
+}
+
+function startMusic() {
+  if (audioContext) {
+    return;
+  }
+
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextConstructor) {
+    return;
+  }
+
+  audioContext = new AudioContextConstructor();
+  musicGain = audioContext.createGain();
+  musicGain.gain.value = GAME_CONFIG.musicVolume;
+  musicGain.connect(audioContext.destination);
+  scheduleNextMusicStep();
+}
+
+function scheduleNextMusicStep() {
+  if (!audioContext || !musicGain) {
+    return;
+  }
+
+  playMusicNote(MUSIC_NOTES[musicStepIndex % MUSIC_NOTES.length]);
+  musicStepIndex += 1;
+  window.setTimeout(
+    scheduleNextMusicStep,
+    isPowerModeActive() ? GAME_CONFIG.powerMusicStepMs : GAME_CONFIG.musicStepMs
+  );
+}
+
+function playMusicNote(frequency) {
+  const oscillator = audioContext.createOscillator();
+  const noteGain = audioContext.createGain();
+  const startTime = audioContext.currentTime;
+  const duration = isPowerModeActive() ? 0.09 : 0.12;
+
+  oscillator.type = 'square';
+  oscillator.frequency.value = frequency;
+  noteGain.gain.setValueAtTime(0.0001, startTime);
+  noteGain.gain.exponentialRampToValueAtTime(0.35, startTime + 0.01);
+  noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  oscillator.connect(noteGain);
+  noteGain.connect(musicGain);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration);
 }
 
 function getMouthOpening() {

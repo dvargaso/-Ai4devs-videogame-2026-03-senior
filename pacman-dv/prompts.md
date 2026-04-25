@@ -207,3 +207,13 @@ Change the following rules:
 ## Adjustment 2
 
 REmove the Score and dots from the main layout. Right now it looks like it's located in the game, just outside of the grill. It must be complete separated. Outside of the game boundaries. What is dots ? IS it dots left ? 
+
+
+# MVP Finished
+
+##Game Experience Improvements
+
+The MVP is working. Now I want to make small improvements:
+- Make the ghosts move faster. 25% faster. Keep level over level speed increases the same. Extract the ghost speed into a config variable I can easily tweak. It should prepresent the base. All other levels are just increments over that base
+- Make the ghosts blink when power pellet is active
+- Add simlple 8 bit retro game music in the background to the game. When pellet is active, it should speed up a bit 
