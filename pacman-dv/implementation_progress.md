@@ -36,7 +36,7 @@ Known limitations:
 
 ## Phase 2: 10x10 Maze and Grid Movement
 
-Status: Ready for testing
+Status: Completed
 
 Goal:
 - Add a fixed 10x10 grid maze.
@@ -80,7 +80,7 @@ Known limitations:
 
 ## Phase 3: Ghosts and Chase Movement
 
-Status: Not started
+Status: Completed
 
 Goal:
 - Add simple ghost characters.
@@ -92,10 +92,11 @@ Manual test:
 - Confirm ghosts spawn in valid maze cells.
 - Confirm ghosts move through paths without crossing walls.
 - Confirm ghosts generally move toward Pacman.
-- Confirm contact between Pacman and a ghost is detected.
+- Confirm contact between Pacman and a ghost shows the caught state.
 
 Known limitations:
 - Ghost collisions may not cost lives until a later phase.
+- Ghost chase behavior is intentionally simple and deterministic.
 - No power pellets yet.
 - No score or win condition yet.
 
