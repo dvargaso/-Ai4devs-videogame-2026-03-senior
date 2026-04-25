@@ -190,3 +190,9 @@ I want to lomit the number of edge doors. Maximim 3 per side. It's a scape route
 It's not great but it's acceptable. Before I add any more rules. I want to be sure that further changes don't break existing rules grid and movement rules. Create a unit test file and add unit tests for every single rule that we have discusses. I want to guarantee that everything stays working ad we add more rules. 
 
 ##Adjustment 5
+
+ok. New rule. For playability. Some of the paths are just sort of staircases. That makes it awkward playing it. For any given movement, pacman must be able to move a minimum of 4 cells without having to change direction. before getting blocked. It should be able to move a maximum of 8 cells without changing direction. 
+
+
+## Adjustment 6
+Last change really made the game worse. The pacman now has to take the oposite direcion following most paths. Meaning it will get stuck really quick and must reverse. This cannot happen. Pacman must be able to move just by taking a 90 degreee turn in at least 1 direction. The only wait out of a path cannot be  the oposite direction. Is this rule clear ? 

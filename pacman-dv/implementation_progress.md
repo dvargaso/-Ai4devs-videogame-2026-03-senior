@@ -43,10 +43,18 @@ Goal:
 - Draw walls as thin, clearly visible boundaries between grid cells.
 - Change Pacman movement from free movement to cell-by-cell movement.
 - Constrain Pacman movement by blocking movement across wall boundaries.
-- Use explicit door gaps in wall boundaries; walls are the default between neighboring cells.
-- Keep each internal vertical and horizontal wall line between 5 and 6 door gaps.
+- Treat walls as small islands/segments, not full path dividers.
+- Make each wall island a connected shape with 2 to 5 wall segments.
+- Allow straight, L-shaped, T-shaped, and similar 90-degree wall island shapes.
+- Keep openings as the default between neighboring cells unless a wall segment blocks movement.
 - Keep all cells reachable through internal grid paths without requiring edge tunnels.
 - Limit edge doors to a maximum of 3 per side; edge tunnels are escape routes, not the main navigation.
+- Avoid sealed rooms, dead ends, and forced reversals where Pacman can only escape by going backward.
+- Prevent free roaming with corridor degree rules instead of a hard straight-span length test.
+- Ensure every cell has exactly 2 or 3 exits; never allow 4-way open cells.
+- Keep most cells at 2 exits so corridors dominate, with some 3-exit intersections.
+- Let wall placement naturally limit direction changes; do not add artificial turn restrictions.
+- Allow Pacman to turn whenever the requested neighboring cell is not blocked by a wall.
 - Keep Pacman moving in the current direction until a wall blocks movement or the player changes direction.
 - Add edge doors that wrap Pacman from one side of the grid to the opposite side when a door exists.
 
@@ -54,10 +62,12 @@ Manual test:
 - Confirm Pacman moves one cell at a time.
 - Confirm walls are thin boundaries and do not fill entire grid cells.
 - Confirm Pacman cannot cross thin wall boundaries.
-- Confirm Pacman can only move between cells through door gaps in the wall boundaries.
-- Confirm Pacman can only change directions where a door gap allows the new direction.
+- Confirm walls feel like small islands/segments instead of long dividers.
+- Confirm Pacman can only move through boundaries not blocked by wall segments.
 - Confirm Pacman can reach all 100 grid positions by navigating through internal paths and door gaps.
 - Confirm Pacman does not need edge tunnels to escape any area.
+- Confirm Pacman never has to reverse as the only way out of a path.
+- Confirm straight paths allow 2 to 8 cells of movement before being blocked.
 - Confirm Pacman keeps moving in the current direction until a wall blocks him or a new valid direction is chosen.
 - Confirm each outer edge has only 3 tunnel doors.
 

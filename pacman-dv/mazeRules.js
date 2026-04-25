@@ -17,29 +17,24 @@
     left: [1, 5, 8]
   };
 
-  const VERTICAL_DOORS = [
-    { col: 1, rows: [0, 1, 3, 5, 7, 9] },
-    { col: 2, rows: [0, 2, 4, 6, 8] },
-    { col: 3, rows: [0, 2, 4, 5, 7, 9] },
-    { col: 4, rows: [1, 3, 5, 7, 9] },
-    { col: 5, rows: [0, 1, 3, 5, 7, 9] },
-    { col: 6, rows: [0, 2, 4, 6, 7, 9] },
-    { col: 7, rows: [0, 1, 3, 5, 7, 9] },
-    { col: 8, rows: [0, 2, 4, 6, 8, 9] },
-    { col: 9, rows: [0, 1, 3, 5, 7, 9] }
+  const EXTRA_CONNECTIONS = [
+    [{ row: 0, col: 2 }, { row: 1, col: 2 }],
+    [{ row: 0, col: 5 }, { row: 1, col: 5 }],
+    [{ row: 1, col: 4 }, { row: 2, col: 4 }],
+    [{ row: 2, col: 6 }, { row: 3, col: 6 }],
+    [{ row: 3, col: 3 }, { row: 4, col: 3 }],
+    [{ row: 4, col: 7 }, { row: 5, col: 7 }],
+    [{ row: 5, col: 2 }, { row: 6, col: 2 }],
+    [{ row: 6, col: 5 }, { row: 7, col: 5 }],
+    [{ row: 7, col: 8 }, { row: 8, col: 8 }],
+    [{ row: 8, col: 4 }, { row: 9, col: 4 }],
+    [{ row: 2, col: 0 }, { row: 2, col: 1 }],
+    [{ row: 4, col: 0 }, { row: 4, col: 1 }]
   ];
 
-  const HORIZONTAL_DOORS = [
-    { row: 1, cols: [0, 2, 4, 6, 9] },
-    { row: 2, cols: [0, 2, 4, 6, 8] },
-    { row: 3, cols: [0, 2, 5, 7, 9] },
-    { row: 4, cols: [0, 2, 4, 6, 8] },
-    { row: 5, cols: [0, 3, 5, 7, 9] },
-    { row: 6, cols: [0, 2, 4, 6, 9] },
-    { row: 7, cols: [0, 3, 5, 7, 9] },
-    { row: 8, cols: [0, 1, 3, 5, 7, 9] },
-    { row: 9, cols: [0, 2, 4, 6, 7, 9] }
-  ];
+  const OPEN_CONNECTIONS = buildOpenConnections();
+  const VERTICAL_WALLS = buildWallLines('v', 'col', 'rows');
+  const HORIZONTAL_WALLS = buildWallLines('h', 'row', 'cols');
 
   const DIRECTIONS = {
     left: { row: 0, col: -1, angle: Math.PI },
@@ -57,14 +52,113 @@
     return EDGE_DOORS[edge].includes(position);
   }
 
+  function buildOpenConnections() {
+    const connections = new Set();
+    const cyclePath = buildHamiltonianCyclePath();
+
+    for (let index = 0; index < cyclePath.length; index += 1) {
+      const fromCell = cyclePath[index];
+      const toCell = cyclePath[(index + 1) % cyclePath.length];
+      connections.add(connectionKey(fromCell, toCell));
+    }
+
+    EXTRA_CONNECTIONS.forEach(([fromCell, toCell]) => {
+      connections.add(connectionKey(fromCell, toCell));
+    });
+
+    return connections;
+  }
+
+  function buildHamiltonianCyclePath() {
+    const path = [];
+
+    path.push({ row: 0, col: 0 });
+
+    for (let col = 1; col < GRID_SIZE; col += 1) {
+      path.push({ row: 0, col });
+    }
+
+    for (let row = 1; row < GRID_SIZE; row += 1) {
+      if (row % 2 === 1) {
+        for (let col = GRID_SIZE - 1; col >= 1; col -= 1) {
+          path.push({ row, col });
+        }
+      } else {
+        for (let col = 1; col < GRID_SIZE; col += 1) {
+          path.push({ row, col });
+        }
+      }
+    }
+
+    for (let row = GRID_SIZE - 1; row >= 1; row -= 1) {
+      path.push({ row, col: 0 });
+    }
+
+    return path;
+  }
+
+  function buildWallLines(type, lineKey, positionsKey) {
+    const lines = new Map();
+
+    if (type === 'v') {
+      for (let row = 0; row < GRID_SIZE; row += 1) {
+        for (let col = 1; col < GRID_SIZE; col += 1) {
+          const fromCell = { row, col: col - 1 };
+          const toCell = { row, col };
+
+          if (!hasOpenConnection(fromCell, toCell)) {
+            addWallPosition(lines, col, row);
+          }
+        }
+      }
+    } else {
+      for (let row = 1; row < GRID_SIZE; row += 1) {
+        for (let col = 0; col < GRID_SIZE; col += 1) {
+          const fromCell = { row: row - 1, col };
+          const toCell = { row, col };
+
+          if (!hasOpenConnection(fromCell, toCell)) {
+            addWallPosition(lines, row, col);
+          }
+        }
+      }
+    }
+
+    return [...lines.entries()]
+      .map(([line, positions]) => ({
+        [lineKey]: line,
+        [positionsKey]: [...new Set(positions)].sort((a, b) => a - b)
+      }))
+      .sort((a, b) => a[lineKey] - b[lineKey]);
+  }
+
+  function addWallPosition(lines, line, position) {
+    if (!lines.has(line)) {
+      lines.set(line, []);
+    }
+
+    lines.get(line).push(position);
+  }
+
+  function hasOpenConnection(fromCell, toCell) {
+    return OPEN_CONNECTIONS.has(connectionKey(fromCell, toCell));
+  }
+
+  function connectionKey(fromCell, toCell) {
+    const firstKey = cellKey(fromCell);
+    const secondKey = cellKey(toCell);
+
+    return firstKey < secondKey ? `${firstKey}|${secondKey}` : `${secondKey}|${firstKey}`;
+  }
+
   function hasVerticalWall(row, col) {
-    const doorLine = VERTICAL_DOORS.find((door) => door.col === col);
-    return !doorLine || !doorLine.rows.includes(row);
+    const wallLine = VERTICAL_WALLS.find((wall) => wall.col === col);
+    return Boolean(wallLine && wallLine.rows.includes(row));
   }
 
   function hasHorizontalWall(row, col) {
-    const doorLine = HORIZONTAL_DOORS.find((door) => door.row === row);
-    return !doorLine || !doorLine.cols.includes(col);
+    const wallLine = HORIZONTAL_WALLS.find((wall) => wall.row === row);
+    return Boolean(wallLine && wallLine.cols.includes(col));
   }
 
   function hasWallBetween(fromCell, toCell) {
@@ -117,7 +211,7 @@
       return true;
     }
 
-    return !hasWallBetween(fromCell, nextCell);
+    return hasOpenConnection(fromCell, nextCell);
   }
 
   function chooseMovementDirection(fromCell, currentDirection, requestedDirection, allowEdgeTunnels = true) {
@@ -183,8 +277,10 @@
     GRID_SIZE,
     CELL_SIZE,
     EDGE_DOORS,
-    VERTICAL_DOORS,
-    HORIZONTAL_DOORS,
+    EXTRA_CONNECTIONS,
+    OPEN_CONNECTIONS,
+    VERTICAL_WALLS,
+    HORIZONTAL_WALLS,
     DIRECTIONS,
     isInsideGrid,
     hasEdgeDoor,

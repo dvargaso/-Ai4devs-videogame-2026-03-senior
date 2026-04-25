@@ -5,8 +5,9 @@ const {
   GRID_SIZE,
   CELL_SIZE,
   EDGE_DOORS,
-  VERTICAL_DOORS,
-  HORIZONTAL_DOORS,
+  EXTRA_CONNECTIONS,
+  VERTICAL_WALLS,
+  HORIZONTAL_WALLS,
   DIRECTIONS,
   isInsideGrid,
   hasVerticalWall,
@@ -35,37 +36,38 @@ function run() {
   console.log(`\n${tests.length} tests passed`);
 }
 
-function maxConsecutiveRun(values) {
-  let longestRun = 1;
-  let currentRun = 1;
-
-  for (let index = 1; index < values.length; index += 1) {
-    if (values[index] === values[index - 1] + 1) {
-      currentRun += 1;
-      longestRun = Math.max(longestRun, currentRun);
-    } else {
-      currentRun = 1;
-    }
-  }
-
-  return longestRun;
-}
-
-function getDoorValues(line) {
-  return line.rows || line.cols;
-}
-
 function assertSortedUnique(values, min, max) {
   values.forEach((value, index) => {
-    assert.ok(value >= min && value <= max, `door position ${value} is outside ${min}-${max}`);
+    assert.ok(value >= min && value <= max, `wall position ${value} is outside ${min}-${max}`);
 
     if (index > 0) {
-      assert.ok(value > values[index - 1], 'door positions must be sorted and unique');
+      assert.ok(value > values[index - 1], 'wall positions must be sorted and unique');
     }
   });
 }
 
-test('grid is exactly 10x10 with 100 reachable positions', () => {
+function getOpenDirections(cell, allowEdgeTunnels = false) {
+  return [DIRECTIONS.up, DIRECTIONS.down, DIRECTIONS.left, DIRECTIONS.right]
+    .filter((direction) => canMove(cell, direction, allowEdgeTunnels));
+}
+
+function getOppositeDirection(direction) {
+  if (direction === DIRECTIONS.up) return DIRECTIONS.down;
+  if (direction === DIRECTIONS.down) return DIRECTIONS.up;
+  if (direction === DIRECTIONS.left) return DIRECTIONS.right;
+  if (direction === DIRECTIONS.right) return DIRECTIONS.left;
+  return DIRECTIONS.none;
+}
+
+function getPerpendicularDirections(direction) {
+  if (direction === DIRECTIONS.up || direction === DIRECTIONS.down) {
+    return [DIRECTIONS.left, DIRECTIONS.right];
+  }
+
+  return [DIRECTIONS.up, DIRECTIONS.down];
+}
+
+test('grid is exactly 10x10 with 100 playable positions', () => {
   const cells = getAllCells();
   const uniqueCells = new Set(cells.map((cell) => `${cell.row},${cell.col}`));
 
@@ -81,89 +83,126 @@ test('cell centers align with the grid size and cell size', () => {
 });
 
 test('movement directions are limited to left, right, up, and down', () => {
-  const movementDirections = [DIRECTIONS.left, DIRECTIONS.right, DIRECTIONS.up, DIRECTIONS.down];
-
-  movementDirections.forEach((direction) => {
-    const distance = Math.abs(direction.row) + Math.abs(direction.col);
-    assert.equal(distance, 1);
+  [DIRECTIONS.left, DIRECTIONS.right, DIRECTIONS.up, DIRECTIONS.down].forEach((direction) => {
+    assert.equal(Math.abs(direction.row) + Math.abs(direction.col), 1);
   });
 
   assert.deepEqual(DIRECTIONS.none, { row: 0, col: 0, angle: 0 });
 });
 
-test('every grid slot is a playable position, not a filled wall cell', () => {
-  getAllCells().forEach((cell) => assert.ok(isInsideGrid(cell)));
-});
+test('corridor graph has deliberate extra intersections', () => {
+  assert.ok(EXTRA_CONNECTIONS.length >= 8);
 
-test('internal vertical wall lines have 5 to 6 door gaps', () => {
-  assert.equal(VERTICAL_DOORS.length, GRID_SIZE - 1);
-
-  VERTICAL_DOORS.forEach((line) => {
-    assert.ok(line.col >= 1 && line.col <= GRID_SIZE - 1);
-    assert.ok(line.rows.length >= 5 && line.rows.length <= 6);
-    assertSortedUnique(line.rows, 0, GRID_SIZE - 1);
+  EXTRA_CONNECTIONS.forEach(([fromCell, toCell]) => {
+    assert.ok(isInsideGrid(fromCell));
+    assert.ok(isInsideGrid(toCell));
+    assert.equal(Math.abs(fromCell.row - toCell.row) + Math.abs(fromCell.col - toCell.col), 1);
   });
 });
 
-test('internal horizontal wall lines have 5 to 6 door gaps', () => {
-  assert.equal(HORIZONTAL_DOORS.length, GRID_SIZE - 1);
+test('walls are derived from blocked corridor boundaries', () => {
+  assert.ok(VERTICAL_WALLS.length > 0);
+  assert.ok(HORIZONTAL_WALLS.length > 0);
 
-  HORIZONTAL_DOORS.forEach((line) => {
-    assert.ok(line.row >= 1 && line.row <= GRID_SIZE - 1);
-    assert.ok(line.cols.length >= 5 && line.cols.length <= 6);
-    assertSortedUnique(line.cols, 0, GRID_SIZE - 1);
+  VERTICAL_WALLS.forEach((wall) => {
+    assert.ok(wall.col >= 1 && wall.col <= GRID_SIZE - 1);
+    assertSortedUnique(wall.rows, 0, GRID_SIZE - 1);
   });
-});
 
-test('door gaps do not form long consecutive runs', () => {
-  [...VERTICAL_DOORS, ...HORIZONTAL_DOORS].forEach((line) => {
-    assert.ok(maxConsecutiveRun(getDoorValues(line)) <= 2);
+  HORIZONTAL_WALLS.forEach((wall) => {
+    assert.ok(wall.row >= 1 && wall.row <= GRID_SIZE - 1);
+    assertSortedUnique(wall.cols, 0, GRID_SIZE - 1);
   });
 });
 
 test('edge doors are limited to at most 3 per side', () => {
-  Object.entries(EDGE_DOORS).forEach(([, doors]) => {
+  Object.values(EDGE_DOORS).forEach((doors) => {
     assert.ok(doors.length <= 3);
     assertSortedUnique(doors, 0, GRID_SIZE - 1);
   });
 });
 
 test('edge doors are optional escape tunnels, not required for internal reachability', () => {
-  const reachableWithoutTunnels = getReachableCells({ row: 1, col: 1 }, false);
-
-  assert.equal(reachableWithoutTunnels.size, GRID_SIZE * GRID_SIZE);
+  assert.equal(getReachableCells({ row: 1, col: 1 }, false).size, GRID_SIZE * GRID_SIZE);
+  assert.equal(getReachableCells({ row: 1, col: 1 }, true).size, GRID_SIZE * GRID_SIZE);
 });
 
-test('all cells remain reachable when edge tunnels are enabled', () => {
-  const reachableWithTunnels = getReachableCells({ row: 1, col: 1 }, true);
-
-  assert.equal(reachableWithTunnels.size, GRID_SIZE * GRID_SIZE);
+test('no cell is a dead end', () => {
+  getAllCells().forEach((cell) => {
+    assert.ok(getOpenDirections(cell, false).length >= 2, `dead end at ${cell.row},${cell.col}`);
+  });
 });
 
-test('movement through vertical boundaries is allowed only through vertical door gaps', () => {
+test('corridors dominate and no cell is 4-way open', () => {
+  const degreeCounts = { 2: 0, 3: 0, 4: 0 };
+
+  getAllCells().forEach((cell) => {
+    const degree = getOpenDirections(cell, false).length;
+    assert.ok(degree === 2 || degree === 3, `cell ${cell.row},${cell.col} has ${degree} exits`);
+    degreeCounts[degree] += 1;
+  });
+
+  assert.ok(degreeCounts[2] >= 70, `expected corridors to dominate, got ${degreeCounts[2]} degree-2 cells`);
+  assert.ok(degreeCounts[3] >= 10, `expected some intersections, got ${degreeCounts[3]} degree-3 cells`);
+  assert.equal(degreeCounts[4], 0);
+});
+
+test('Pacman is never forced to reverse as the only way out', () => {
+  getAllCells().forEach((cell) => {
+    [DIRECTIONS.up, DIRECTIONS.down, DIRECTIONS.left, DIRECTIONS.right].forEach((incomingDirection) => {
+      const reverseDirection = getOppositeDirection(incomingDirection);
+
+      if (!canMove(cell, reverseDirection, false) || canMove(cell, incomingDirection, false)) {
+        return;
+      }
+
+      const canTurn = getPerpendicularDirections(incomingDirection)
+        .some((direction) => canMove(cell, direction, false));
+
+      assert.ok(canTurn, `forced reversal at ${cell.row},${cell.col}`);
+    });
+  });
+});
+
+test('walls prevent direction changes where the requested path is blocked', () => {
+  const wallLimitedCell = { row: 0, col: 4 };
+
+  assert.equal(canMove(wallLimitedCell, DIRECTIONS.right, false), true);
+  assert.equal(canMove(wallLimitedCell, DIRECTIONS.down, false), false);
+  assert.equal(chooseMovementDirection(wallLimitedCell, DIRECTIONS.right, DIRECTIONS.down, false), DIRECTIONS.right);
+});
+
+test('Pacman changes direction when the requested path is open', () => {
+  const cornerCell = { row: 0, col: 0 };
+
+  assert.equal(canMove(cornerCell, DIRECTIONS.down, false), true);
+  assert.equal(chooseMovementDirection(cornerCell, DIRECTIONS.right, DIRECTIONS.down, false), DIRECTIONS.down);
+});
+
+test('movement through vertical boundaries is blocked only by vertical wall islands', () => {
   for (let col = 1; col < GRID_SIZE; col += 1) {
     for (let row = 0; row < GRID_SIZE; row += 1) {
       const fromLeft = { row, col: col - 1 };
       const fromRight = { row, col };
-      const hasDoor = !hasVerticalWall(row, col);
+      const hasWall = hasVerticalWall(row, col);
 
-      assert.equal(canMove(fromLeft, DIRECTIONS.right, false), hasDoor);
-      assert.equal(canMove(fromRight, DIRECTIONS.left, false), hasDoor);
-      assert.equal(hasWallBetween(fromLeft, fromRight), !hasDoor);
+      assert.equal(canMove(fromLeft, DIRECTIONS.right, false), !hasWall);
+      assert.equal(canMove(fromRight, DIRECTIONS.left, false), !hasWall);
+      assert.equal(hasWallBetween(fromLeft, fromRight), hasWall);
     }
   }
 });
 
-test('movement through horizontal boundaries is allowed only through horizontal door gaps', () => {
+test('movement through horizontal boundaries is blocked only by horizontal wall islands', () => {
   for (let row = 1; row < GRID_SIZE; row += 1) {
     for (let col = 0; col < GRID_SIZE; col += 1) {
       const fromTop = { row: row - 1, col };
       const fromBottom = { row, col };
-      const hasDoor = !hasHorizontalWall(row, col);
+      const hasWall = hasHorizontalWall(row, col);
 
-      assert.equal(canMove(fromTop, DIRECTIONS.down, false), hasDoor);
-      assert.equal(canMove(fromBottom, DIRECTIONS.up, false), hasDoor);
-      assert.equal(hasWallBetween(fromTop, fromBottom), !hasDoor);
+      assert.equal(canMove(fromTop, DIRECTIONS.down, false), !hasWall);
+      assert.equal(canMove(fromBottom, DIRECTIONS.up, false), !hasWall);
+      assert.equal(hasWallBetween(fromTop, fromBottom), hasWall);
     }
   }
 });
@@ -223,19 +262,15 @@ test('Pacman keeps current direction when requested turn is blocked', () => {
 });
 
 test('Pacman changes direction when requested turn has a door gap', () => {
-  const cell = { row: 0, col: 1 };
+  const cell = { row: 0, col: 9 };
 
-  assert.equal(canMove(cell, DIRECTIONS.right, false), true);
+  assert.equal(canMove(cell, DIRECTIONS.right, false), false);
   assert.equal(canMove(cell, DIRECTIONS.left, false), true);
   assert.equal(chooseMovementDirection(cell, DIRECTIONS.right, DIRECTIONS.left, false), DIRECTIONS.left);
 });
 
 test('Pacman stops when current direction and requested direction are both blocked', () => {
-  const cell = { row: 0, col: 0 };
-
-  assert.equal(canMove(cell, DIRECTIONS.left, false), false);
-  assert.equal(canMove(cell, DIRECTIONS.up, false), false);
-  assert.equal(chooseMovementDirection(cell, DIRECTIONS.left, DIRECTIONS.up, false), DIRECTIONS.none);
+  assert.equal(chooseMovementDirection({ row: 0, col: 0 }, DIRECTIONS.left, DIRECTIONS.up, false), DIRECTIONS.none);
 });
 
 run();
