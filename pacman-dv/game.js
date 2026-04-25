@@ -7,11 +7,17 @@ const {
   hasHorizontalWall,
   getNextCell,
   chooseMovementDirection,
-  getCellCenter
+  getCellCenter,
+  getAllCells
 } = PacmanMazeRules;
 
 const {
   POWER_MODE_DURATION,
+  createDotCells,
+  collectDot,
+  getRemainingDots,
+  isLevelWon,
+  addDotScore,
   collectPowerPellet,
   updatePowerModeTime,
   isPowerModeActive: hasActivePowerMode,
@@ -26,12 +32,14 @@ const PACMAN_SPEED = 160;
 const PACMAN_RADIUS = 18;
 const GHOST_SPEED = 105;
 const GHOST_RADIUS = 17;
+const DOT_RADIUS = 3;
 const POWER_PELLET_RADIUS = 8;
 const MOUTH_ANIMATION_SPEED = 0.008;
 const MAX_MOUTH_OPENING = 0.75;
 const WALL_THICKNESS = 6;
 const WALL_COLOR = 0x163cff;
 const PATH_COLOR = 0x050505;
+const DOT_COLOR = 0xffe3b0;
 const POWER_PELLET_COLOR = 0xfff6a0;
 const VULNERABLE_GHOST_COLOR = 0x243dff;
 const GHOST_SPAWNS = [
@@ -50,18 +58,23 @@ const POWER_PELLET_CELLS = [
 
 let pacman;
 let ghosts = [];
+let dots = [];
 let powerPellets = [];
 let mazeGraphics;
 let cursors;
+let scoreText;
+let remainingDotsText;
 let statusText;
 let mouthTime = 0;
 let powerModeTimeRemaining = 0;
+let score = 0;
 let currentDirection = 0;
 let gridPosition = { row: 1, col: 1 };
 let requestedDirection = DIRECTIONS.none;
 let movementDirection = DIRECTIONS.none;
 let targetCell = null;
 let isCaught = false;
+let levelWon = false;
 
 const config = {
   type: Phaser.AUTO,
@@ -82,12 +95,28 @@ function create() {
   mazeGraphics = this.add.graphics();
   drawMaze();
 
+  dots = createDotCells(getAllCells(), getExcludedDotCells())
+    .map((cell) => createDot(this, cell));
   powerPellets = POWER_PELLET_CELLS.map((cell) => createPowerPellet(this, cell));
 
   pacman = this.add.graphics();
   placePacmanAtCell(gridPosition);
 
   ghosts = GHOST_SPAWNS.map((spawn) => createGhost(this, spawn));
+  scoreText = this.add.text(10, 10, 'Score: 0', {
+    fontFamily: 'Arial',
+    fontSize: '18px',
+    color: '#ffffff',
+    stroke: '#000000',
+    strokeThickness: 4
+  });
+  remainingDotsText = this.add.text(10, 32, `Dots: ${getRemainingDots(dots)}`, {
+    fontFamily: 'Arial',
+    fontSize: '18px',
+    color: '#ffffff',
+    stroke: '#000000',
+    strokeThickness: 4
+  });
   statusText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
     fontFamily: 'Arial',
     fontSize: '36px',
@@ -100,7 +129,7 @@ function create() {
 }
 
 function update(time, delta) {
-  if (isCaught) {
+  if (isCaught || levelWon) {
     return;
   }
 
@@ -120,6 +149,7 @@ function update(time, delta) {
   const mouthOpening = getMouthOpening();
   drawPacman(mouthOpening);
 
+  checkDotContact();
   checkPowerPelletContact();
   updateGhosts(delta);
   checkGhostContact();
@@ -242,6 +272,59 @@ function drawInteriorWalls() {
       }
     }
   }
+}
+
+function getExcludedDotCells() {
+  return [
+    gridPosition,
+    ...POWER_PELLET_CELLS,
+    ...GHOST_SPAWNS
+  ];
+}
+
+function createDot(scene, cell) {
+  const dot = {
+    graphics: scene.add.graphics(),
+    row: cell.row,
+    col: cell.col,
+    eaten: false
+  };
+  const center = getCellCenter(cell.row, cell.col);
+
+  dot.graphics.x = center.x;
+  dot.graphics.y = center.y;
+  dot.graphics.fillStyle(DOT_COLOR);
+  dot.graphics.fillCircle(0, 0, DOT_RADIUS);
+
+  return dot;
+}
+
+function checkDotContact() {
+  const dot = collectDot(dots, gridPosition);
+
+  if (!dot) {
+    return;
+  }
+
+  dot.graphics.setVisible(false);
+  score = addDotScore(score);
+  updateHud();
+
+  if (isLevelWon(dots)) {
+    winLevel();
+  }
+}
+
+function updateHud() {
+  scoreText.setText(`Score: ${score}`);
+  remainingDotsText.setText(`Dots: ${getRemainingDots(dots)}`);
+}
+
+function winLevel() {
+  levelWon = true;
+  movementDirection = DIRECTIONS.none;
+  targetCell = null;
+  statusText.setText('LEVEL CLEAR!');
 }
 
 function createPowerPellet(scene, cell) {

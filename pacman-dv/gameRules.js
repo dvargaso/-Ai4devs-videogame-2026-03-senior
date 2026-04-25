@@ -11,6 +11,7 @@
   root.PacmanGameRules = rules;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (mazeRules) {
   const POWER_MODE_DURATION = 10000;
+  const DOT_SCORE = 10;
   const CONTACT_ACTIONS = {
     none: 'none',
     caught: 'caught',
@@ -34,6 +35,38 @@
 
     pellet.eaten = true;
     return pellet;
+  }
+
+  function createDotCells(allCells, excludedCells) {
+    return allCells
+      .filter((cell) => (cell.row + cell.col) % 2 === 0)
+      .filter((cell) => !isExcludedCell(cell, excludedCells))
+      .map((cell) => ({ row: cell.row, col: cell.col, eaten: false }));
+  }
+
+  function collectDot(dots, pacmanCell) {
+    const dot = dots.find((candidate) => {
+      return !candidate.eaten && candidate.row === pacmanCell.row && candidate.col === pacmanCell.col;
+    });
+
+    if (!dot) {
+      return null;
+    }
+
+    dot.eaten = true;
+    return dot;
+  }
+
+  function getRemainingDots(dots) {
+    return dots.filter((dot) => !dot.eaten).length;
+  }
+
+  function isLevelWon(dots) {
+    return dots.length > 0 && getRemainingDots(dots) === 0;
+  }
+
+  function addDotScore(score) {
+    return score + DOT_SCORE;
   }
 
   function updatePowerModeTime(timeRemaining, delta) {
@@ -94,15 +127,28 @@
     return Math.abs(firstCell.row - secondCell.row) + Math.abs(firstCell.col - secondCell.col);
   }
 
+  function isExcludedCell(cell, excludedCells) {
+    return excludedCells.some((excludedCell) => {
+      return excludedCell.row === cell.row && excludedCell.col === cell.col;
+    });
+  }
+
   return {
     POWER_MODE_DURATION,
+    DOT_SCORE,
     CONTACT_ACTIONS,
     collectPowerPellet,
+    createDotCells,
+    collectDot,
+    getRemainingDots,
+    isLevelWon,
+    addDotScore,
     updatePowerModeTime,
     isPowerModeActive,
     chooseGhostDirection,
     getGhostContactAction,
     isOppositeDirection,
-    getGridDistance
+    getGridDistance,
+    isExcludedCell
   };
 });

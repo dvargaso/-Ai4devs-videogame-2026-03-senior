@@ -1,10 +1,18 @@
 const assert = require('assert/strict');
 const {
-  DIRECTIONS
+  DIRECTIONS,
+  getAllCells
 } = require('./mazeRules');
 const {
   POWER_MODE_DURATION,
+  DOT_SCORE,
   CONTACT_ACTIONS,
+  createDotCells,
+  collectDot,
+  getRemainingDots,
+  isLevelWon,
+  addDotScore,
+  isExcludedCell,
   collectPowerPellet,
   updatePowerModeTime,
   isPowerModeActive,
@@ -52,6 +60,59 @@ test('Pacman collects only uneaten power pellets at his current cell', () => {
   assert.equal(pellets[1].eaten, true);
   assert.equal(collectPowerPellet(pellets, { row: 9, col: 8 }), null);
   assert.equal(collectPowerPellet(pellets, { row: 3, col: 3 }), null);
+});
+
+test('dot cells are generated on alternating grid cells excluding spawns and power pellets', () => {
+  const excludedCells = [
+    { row: 1, col: 1 },
+    { row: 8, col: 8 },
+    { row: 0, col: 8 }
+  ];
+  const dots = createDotCells(getAllCells(), excludedCells);
+
+  assert.ok(dots.length > 0);
+  dots.forEach((dot) => {
+    assert.equal((dot.row + dot.col) % 2, 0);
+    assert.equal(dot.eaten, false);
+    assert.equal(isExcludedCell(dot, excludedCells), false);
+  });
+});
+
+test('Pacman collects only uneaten dots at his current cell', () => {
+  const dots = [
+    { row: 0, col: 0, eaten: false },
+    { row: 2, col: 2, eaten: true },
+    { row: 4, col: 4, eaten: false }
+  ];
+
+  const collectedDot = collectDot(dots, { row: 0, col: 0 });
+  assert.equal(collectedDot, dots[0]);
+  assert.equal(dots[0].eaten, true);
+  assert.equal(collectDot(dots, { row: 2, col: 2 }), null);
+  assert.equal(collectDot(dots, { row: 1, col: 1 }), null);
+});
+
+test('dot score and remaining dot count update after collection', () => {
+  const dots = [
+    { row: 0, col: 0, eaten: false },
+    { row: 0, col: 2, eaten: true }
+  ];
+
+  assert.equal(DOT_SCORE, 10);
+  assert.equal(getRemainingDots(dots), 1);
+  assert.equal(addDotScore(30), 40);
+});
+
+test('level is won only after all dots are eaten', () => {
+  const dots = [
+    { row: 0, col: 0, eaten: true },
+    { row: 0, col: 2, eaten: false }
+  ];
+
+  assert.equal(isLevelWon(dots), false);
+  dots[1].eaten = true;
+  assert.equal(isLevelWon(dots), true);
+  assert.equal(isLevelWon([]), false);
 });
 
 test('normal ghosts choose an open direction that moves closer to Pacman', () => {

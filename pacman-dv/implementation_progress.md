@@ -103,7 +103,7 @@ Known limitations:
 
 ## Phase 4: Power Pellets and Vulnerable Ghosts
 
-Status: Ready for testing
+Status: Completed
 
 Goal:
 - Add 5 to 8 power pellets to valid walkable cells.
@@ -127,18 +127,20 @@ Known limitations:
 
 ## Phase 5: Dots, Score, and Level Win Condition
 
-Status: Not started
+Status: Ready for testing
 
 Goal:
 - Add dots to every other valid walkable cell except spawn and power pellet cells.
 - Increase score when Pacman eats dots.
 - Track remaining dots.
 - Win the level when all dots are eaten.
+- Cover dot placement, collection, scoring, and win condition rules in `gameRules.test.js`.
 
 Manual test:
 - Confirm dots appear only on valid paths.
 - Confirm dots disappear when eaten.
 - Confirm score increases after eating dots.
+- Confirm remaining dot count decreases after eating dots.
 - Confirm the level win state triggers after all dots are eaten.
 
 Known limitations:
