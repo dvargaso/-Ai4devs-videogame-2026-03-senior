@@ -62,20 +62,22 @@ test('Pacman collects only uneaten power pellets at his current cell', () => {
   assert.equal(collectPowerPellet(pellets, { row: 3, col: 3 }), null);
 });
 
-test('dot cells are generated on alternating grid cells excluding spawns and power pellets', () => {
+test('dot cells are generated for every grid cell except power pellets', () => {
   const excludedCells = [
-    { row: 1, col: 1 },
-    { row: 8, col: 8 },
-    { row: 0, col: 8 }
+    { row: 0, col: 1 },
+    { row: 4, col: 4 },
+    { row: 9, col: 8 }
   ];
-  const dots = createDotCells(getAllCells(), excludedCells);
+  const allCells = getAllCells();
+  const dots = createDotCells(allCells, excludedCells);
 
-  assert.ok(dots.length > 0);
+  assert.equal(dots.length, allCells.length - excludedCells.length);
   dots.forEach((dot) => {
-    assert.equal((dot.row + dot.col) % 2, 0);
     assert.equal(dot.eaten, false);
     assert.equal(isExcludedCell(dot, excludedCells), false);
   });
+  assert.ok(dots.some((dot) => dot.row === 1 && dot.col === 1));
+  assert.ok(dots.some((dot) => dot.row === 8 && dot.col === 8));
 });
 
 test('Pacman collects only uneaten dots at his current cell', () => {

@@ -130,14 +130,16 @@ Known limitations:
 Status: Ready for testing
 
 Goal:
-- Add dots to every other valid walkable cell except spawn and power pellet cells.
+- Add dots to every grid cell except power pellet cells.
 - Increase score when Pacman eats dots.
 - Track remaining dots.
 - Win the level when all dots are eaten.
 - Cover dot placement, collection, scoring, and win condition rules in `gameRules.test.js`.
+- Place score and remaining-dot counters outside the Phaser game canvas and game border.
 
 Manual test:
-- Confirm dots appear only on valid paths.
+- Confirm dots appear in every cell that does not contain a power pellet.
+- Confirm score and `Dots left` counters appear outside the game border.
 - Confirm dots disappear when eaten.
 - Confirm score increases after eating dots.
 - Confirm remaining dot count decreases after eating dots.

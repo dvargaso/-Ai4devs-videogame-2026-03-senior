@@ -39,7 +39,6 @@
 
   function createDotCells(allCells, excludedCells) {
     return allCells
-      .filter((cell) => (cell.row + cell.col) % 2 === 0)
       .filter((cell) => !isExcludedCell(cell, excludedCells))
       .map((cell) => ({ row: cell.row, col: cell.col, eaten: false }));
   }

@@ -26,8 +26,10 @@ const {
   CONTACT_ACTIONS
 } = PacmanGameRules;
 
-const GAME_WIDTH = GRID_SIZE * CELL_SIZE;
-const GAME_HEIGHT = GRID_SIZE * CELL_SIZE;
+const GRID_WIDTH = GRID_SIZE * CELL_SIZE;
+const GRID_HEIGHT = GRID_SIZE * CELL_SIZE;
+const GAME_WIDTH = GRID_WIDTH;
+const GAME_HEIGHT = GRID_HEIGHT;
 const PACMAN_SPEED = 160;
 const PACMAN_RADIUS = 18;
 const GHOST_SPEED = 105;
@@ -92,6 +94,8 @@ new Phaser.Game(config);
 
 function create() {
   cursors = this.input.keyboard.createCursorKeys();
+  scoreText = document.getElementById('score-counter');
+  remainingDotsText = document.getElementById('dots-left-counter');
   mazeGraphics = this.add.graphics();
   drawMaze();
 
@@ -103,21 +107,8 @@ function create() {
   placePacmanAtCell(gridPosition);
 
   ghosts = GHOST_SPAWNS.map((spawn) => createGhost(this, spawn));
-  scoreText = this.add.text(10, 10, 'Score: 0', {
-    fontFamily: 'Arial',
-    fontSize: '18px',
-    color: '#ffffff',
-    stroke: '#000000',
-    strokeThickness: 4
-  });
-  remainingDotsText = this.add.text(10, 32, `Dots: ${getRemainingDots(dots)}`, {
-    fontFamily: 'Arial',
-    fontSize: '18px',
-    color: '#ffffff',
-    stroke: '#000000',
-    strokeThickness: 4
-  });
-  statusText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
+  updateHud();
+  statusText = this.add.text(GRID_WIDTH / 2, GRID_HEIGHT / 2, '', {
     fontFamily: 'Arial',
     fontSize: '36px',
     color: '#ffffff',
@@ -214,7 +205,7 @@ function placePacmanAtCell(cell) {
 function drawMaze() {
   mazeGraphics.clear();
   mazeGraphics.fillStyle(PATH_COLOR);
-  mazeGraphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  mazeGraphics.fillRect(0, 0, GRID_WIDTH, GRID_HEIGHT);
 
   drawOuterWalls();
   drawInteriorWalls();
@@ -229,7 +220,7 @@ function drawOuterWalls() {
     }
 
     if (!hasEdgeDoor('bottom', col)) {
-      mazeGraphics.fillRect(col * CELL_SIZE, GAME_HEIGHT - WALL_THICKNESS, CELL_SIZE, WALL_THICKNESS);
+      mazeGraphics.fillRect(col * CELL_SIZE, GRID_HEIGHT - WALL_THICKNESS, CELL_SIZE, WALL_THICKNESS);
     }
   }
 
@@ -275,11 +266,7 @@ function drawInteriorWalls() {
 }
 
 function getExcludedDotCells() {
-  return [
-    gridPosition,
-    ...POWER_PELLET_CELLS,
-    ...GHOST_SPAWNS
-  ];
+  return POWER_PELLET_CELLS;
 }
 
 function createDot(scene, cell) {
@@ -316,8 +303,8 @@ function checkDotContact() {
 }
 
 function updateHud() {
-  scoreText.setText(`Score: ${score}`);
-  remainingDotsText.setText(`Dots: ${getRemainingDots(dots)}`);
+  scoreText.textContent = `Score: ${score}`;
+  remainingDotsText.textContent = `Dots left: ${getRemainingDots(dots)}`;
 }
 
 function winLevel() {

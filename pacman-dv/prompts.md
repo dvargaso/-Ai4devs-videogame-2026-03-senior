@@ -196,3 +196,14 @@ ok. New rule. For playability. Some of the paths are just sort of staircases. Th
 
 ## Adjustment 6
 Last change really made the game worse. The pacman now has to take the oposite direcion following most paths. Meaning it will get stuck really quick and must reverse. This cannot happen. Pacman must be able to move just by taking a 90 degreee turn in at least 1 direction. The only wait out of a path cannot be  the oposite direction. Is this rule clear ? 
+
+# Phase 5
+
+##Adjustmet 1
+Change the following rules:
+- There must be a dot pr cell unless there is a pellet. Right now there is one ebvery other cell
+- Counters must be located outside of the grid. 
+
+## Adjustment 2
+
+REmove the Score and dots from the main layout. Right now it looks like it's located in the game, just outside of the grill. It must be complete separated. Outside of the game boundaries. What is dots ? IS it dots left ? 
